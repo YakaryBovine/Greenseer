@@ -18,7 +18,7 @@ public sealed class MongoDbService : IMongoDBService
 
     try
     {
-      var result = client.GetDatabase("admin").RunCommand<BsonDocument>(new BsonDocument("ping", 1));
+      client.GetDatabase("admin").RunCommand<BsonDocument>(new BsonDocument("ping", 1));
       Logger.Log(LogSeverity.Info, nameof(MongoDbService), "Successfully connected to MongoDB deployment.");
     }
     catch (Exception ex)
