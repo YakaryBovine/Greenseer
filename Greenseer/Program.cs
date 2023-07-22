@@ -16,13 +16,13 @@ client.Log += Log;
 
 var interactionService = new InteractionService(client.Rest);
 
-Bootstrapper.Init();
-Bootstrapper.RegisterInstance(config);
-Bootstrapper.RegisterInstance(client);
-Bootstrapper.RegisterInstance(interactionService);
-Bootstrapper._serviceCollection.Configure<GoalDatabaseOptions>(config.GetSection(GoalDatabaseOptions.GoalDatabase));
-Bootstrapper.RegisterType<IInteractionHandler, InteractionHandler>();
-Bootstrapper.RegisterType<IMongoDBService, MongoDBService>();
+Bootstrapper.ServiceCollection.Configure<GoalDatabaseOptions>(config.GetSection(GoalDatabaseOptions.GoalDatabase));
+Bootstrapper.ServiceCollection.AddSingleton(config);
+Bootstrapper.ServiceCollection.AddSingleton(client);
+Bootstrapper.ServiceCollection.AddSingleton(interactionService);
+Bootstrapper.ServiceCollection.AddSingleton<IInteractionHandler, InteractionHandler>();
+Bootstrapper.ServiceCollection.AddSingleton<IMongoDBService, MongoDBService>();
+Bootstrapper.InitializeServiceProvider();
 
 await MainAsync();
 
