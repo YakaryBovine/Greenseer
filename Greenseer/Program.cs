@@ -15,6 +15,7 @@ var client = new DiscordSocketClient();
 client.Log += Log;
 
 var interactionService = new InteractionService(client.Rest);
+client.Ready += async () => { await interactionService.RegisterCommandsToGuildAsync(1130781212978462772); };
 
 Bootstrapper.ServiceCollection.Configure<GoalDatabaseOptions>(config.GetSection(GoalDatabaseOptions.GoalDatabase));
 Bootstrapper.ServiceCollection.AddSingleton(config);

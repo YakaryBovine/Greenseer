@@ -13,14 +13,14 @@ public sealed class CoolCommands : InteractionModuleBase<SocketInteractionContex
     _mongoDbService = mongoDbService;
   }
   
-  [SlashCommand("beans", "Adds a new Goal type to the game.")]
-  public async Task Beans()
+  [SlashCommand("addgoal", "Adds a new Goal type to the game.")]
+  public async Task AddGoal(string name)
   {
     await _mongoDbService.CreateAsync(new Goal
     {
-      Name = "meat",
+      Name = name,
       Description = "sack"
     });
-    await RespondAsync("You executed some bullshit");
+    await RespondAsync($"Successfully added {name} to the list of possible Goals.");
   }
 }
