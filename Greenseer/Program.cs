@@ -5,6 +5,7 @@ using Greenseer;
 using Greenseer.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Greenseer.Models;
 
 var config = new ConfigurationBuilder()
   .AddJsonFile("appsettings.json")
@@ -26,7 +27,7 @@ await MainAsync();
 async Task MainAsync()
 {
   await Bootstrapper.ServiceProvider.GetRequiredService<IInteractionHandler>().InitializeAsync();
-  var token = config.GetRequiredSection("Settings")["DiscordBotToken"];
+  var token = config.GetRequiredSection("Discord")["DiscordBotToken"];
   if (string.IsNullOrWhiteSpace(token))
   {
     await Logger.Log(LogSeverity.Error, $"{nameof(Program)} | {nameof(MainAsync)}", "Token is null or empty.");
