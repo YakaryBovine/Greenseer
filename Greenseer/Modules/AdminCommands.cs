@@ -1,17 +1,22 @@
 ﻿using Discord.Interactions;
 using Greenseer.Models;
 using Greenseer.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Greenseer.Modules;
 
 public sealed class CoolCommands : InteractionModuleBase<SocketInteractionContext>
 {
+  private readonly IMongoDBService _mongoDbService;
+
+  public CoolCommands(IMongoDBService mongoDbService)
+  {
+    _mongoDbService = mongoDbService;
+  }
+  
   [SlashCommand("beans", "Adds a new Goal type to the game.")]
   public async Task Beans()
   {
-    var mongoDbService = Bootstrapper.ServiceProvider.GetRequiredService(typeof(IMongoDBService)) as MongoDBService;
-    mongoDbService?.CreateAsync(new Goal
+    await _mongoDbService.CreateAsync(new Goal
     {
       Name = "meat",
       Description = "sack"
