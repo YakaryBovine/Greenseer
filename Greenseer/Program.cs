@@ -1,9 +1,10 @@
 ﻿using Discord;
-using Discord.Net;
+using Discord.Interactions;
 using Discord.WebSocket;
 using Greenseer;
+using Greenseer.Services;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
+using Microsoft.Extensions.DependencyInjection;
 
 var config = new ConfigurationBuilder()
   .AddJsonFile("appsettings.json")
@@ -11,18 +12,20 @@ var config = new ConfigurationBuilder()
   .Build();
 var client = new DiscordSocketClient();
 client.Log += Log;
-client.Ready += ClientReady;
-client.SlashCommandExecuted += SlashCommandHandler;
 
-// Setup your DI container.
+var interactionService = new InteractionService(client.Rest);
+
 Bootstrapper.Init();
 Bootstrapper.RegisterInstance(client);
+Bootstrapper.RegisterInstance(interactionService);
+Bootstrapper.RegisterType<IInteractionHandler, InteractionHandler>();
 Bootstrapper.RegisterInstance(config);
 
 await MainAsync();
 
 async Task MainAsync()
 {
+  await Bootstrapper.ServiceProvider.GetRequiredService<IInteractionHandler>().InitializeAsync();
   var token = config.GetRequiredSection("Settings")["DiscordBotToken"];
   if (string.IsNullOrWhiteSpace(token))
   {
@@ -36,30 +39,8 @@ async Task MainAsync()
   await Task.Delay(Timeout.Infinite);
 }
 
-async Task ClientReady()
-{
-  var globalCommand = new SlashCommandBuilder();
-  globalCommand.WithName("beans");
-  globalCommand.WithDescription("This is my first global slash command");
-
-  try
-  {
-    await client.CreateGlobalApplicationCommandAsync(globalCommand.Build());
-  }
-  catch(HttpException exception)
-  {
-    var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
-    Console.WriteLine(json);
-  }
-}
-
 Task Log(LogMessage msg)
 {
   Logger.Log(msg);
   return Task.CompletedTask;
-}
-
-async Task SlashCommandHandler(SocketSlashCommand command)
-{
-  await command.RespondAsync($"You executed {command.Data.Name}");
 }
