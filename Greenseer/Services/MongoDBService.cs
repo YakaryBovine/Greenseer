@@ -5,15 +5,15 @@ using MongoDB.Driver;
 
 namespace Greenseer.Services;
 
-public sealed class MongoDBService : IMongoDBService
+public sealed class MongoDbService : IMongoDBService
 {
   private readonly IMongoCollection<Goal> _goalCollection;
 
-  public MongoDBService(IOptions<GoalDatabaseOptions> mongoDbSettings)
+  public MongoDbService(IOptions<GoalDatabaseOptions> mongoDbSettings)
   {
     var client = new MongoClient(mongoDbSettings.Value.ConnectionString);
     var database = client.GetDatabase(mongoDbSettings.Value.DatabaseName);
-    _goalCollection = database.GetCollection<Goal>(mongoDbSettings.Value.BooksCollectionName);
+    _goalCollection = database.GetCollection<Goal>(mongoDbSettings.Value.GoalsCollectionName);
   }
 
   public async Task<List<Goal>> GetAsync()

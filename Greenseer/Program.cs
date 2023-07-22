@@ -21,7 +21,7 @@ Bootstrapper.ServiceCollection.AddSingleton(config);
 Bootstrapper.ServiceCollection.AddSingleton(client);
 Bootstrapper.ServiceCollection.AddSingleton(interactionService);
 Bootstrapper.ServiceCollection.AddSingleton<IInteractionHandler, InteractionHandler>();
-Bootstrapper.ServiceCollection.AddSingleton<IMongoDBService, MongoDBService>();
+Bootstrapper.ServiceCollection.AddSingleton<IMongoDBService, MongoDbService>();
 Bootstrapper.InitializeServiceProvider();
 
 await MainAsync();
