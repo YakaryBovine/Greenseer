@@ -1,46 +1,28 @@
 ﻿using Discord;
-using Discord.Commands;
+using Discord.Net;
 using Discord.WebSocket;
 using Greenseer;
-using Greenseer.Services;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 
 var config = new ConfigurationBuilder()
   .AddJsonFile("appsettings.json")
   .AddEnvironmentVariables()
   .Build();
-var client = new DiscordShardedClient();
-
-var commands = new CommandService(new CommandServiceConfig
-{
-  // Again, log level:
-  LogLevel = LogSeverity.Info,
-            
-  // There's a few more properties you can set,
-  // for example, case-insensitive commands.
-  CaseSensitiveCommands = false,
-});
+var client = new DiscordSocketClient();
+client.Log += Log;
+client.Ready += ClientReady;
+client.SlashCommandExecuted += SlashCommandHandler;
 
 // Setup your DI container.
 Bootstrapper.Init();
 Bootstrapper.RegisterInstance(client);
-Bootstrapper.RegisterInstance(commands);
-Bootstrapper.RegisterType<ICommandHandler, CommandHandler>();
 Bootstrapper.RegisterInstance(config);
 
 await MainAsync();
 
 async Task MainAsync()
 {
-  await Bootstrapper.ServiceProvider.GetRequiredService<ICommandHandler>().InitializeAsync();
-    
-  client.ShardReady += async shard =>
-  {
-    await Logger.Log(LogSeverity.Info, "ShardReady", $"Shard Number {shard.ShardId} is connected and ready!");
-  };
-        
-  // Login and connect.
   var token = config.GetRequiredSection("Settings")["DiscordBotToken"];
   if (string.IsNullOrWhiteSpace(token))
   {
@@ -50,7 +32,34 @@ async Task MainAsync()
         
   await client.LoginAsync(TokenType.Bot, token);
   await client.StartAsync();
-
-  // Wait infinitely so your bot actually stays connected.
+  
   await Task.Delay(Timeout.Infinite);
+}
+
+async Task ClientReady()
+{
+  var globalCommand = new SlashCommandBuilder();
+  globalCommand.WithName("beans");
+  globalCommand.WithDescription("This is my first global slash command");
+
+  try
+  {
+    await client.CreateGlobalApplicationCommandAsync(globalCommand.Build());
+  }
+  catch(HttpException exception)
+  {
+    var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
+    Console.WriteLine(json);
+  }
+}
+
+Task Log(LogMessage msg)
+{
+  Logger.Log(msg);
+  return Task.CompletedTask;
+}
+
+async Task SlashCommandHandler(SocketSlashCommand command)
+{
+  await command.RespondAsync($"You executed {command.Data.Name}");
 }
