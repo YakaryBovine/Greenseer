@@ -16,7 +16,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   public async Task ListGoals()
   {
     var listOfGoals = await _mongoDbService.GetAsync();
-    var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => x.Name));
-    await RespondAsync($"**Goals** {Environment.NewLine}{readableListOfGoals}");
+    var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.Name} ({x.PointValue})**: {x.Description}"));
+    await RespondAsync($"__**Goals**__ {Environment.NewLine}{readableListOfGoals}");
   }
 }
