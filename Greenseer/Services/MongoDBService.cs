@@ -6,7 +6,7 @@ using MongoDB.Driver;
 
 namespace Greenseer.Services;
 
-public sealed class MongoDbService : IMongoDBService
+public sealed class MongoDbService : IMongoDbService
 {
   private readonly IMongoCollection<Goal> _goalCollection;
 
@@ -27,13 +27,12 @@ public sealed class MongoDbService : IMongoDBService
     }
   }
 
-  public async Task<List<Goal>> GetAsync()
-  {
-    return await _goalCollection.Find(new BsonDocument()).ToListAsync();
-  }
+  public async Task<List<Goal>> GetAsync() => await _goalCollection.Find(new BsonDocument()).ToListAsync();
 
-  public async Task CreateAsync(Goal goal)
-  {
-    await _goalCollection.InsertOneAsync(goal);
-  }
+  public async Task CreateAsync(Goal goal) => await _goalCollection.InsertOneAsync(goal);
+
+  public async Task DeleteGoal(string name) =>
+    await _goalCollection.DeleteOneAsync(x => x.Name == name);
+  
+  public async Task<Goal?> GetGoal(string name) => await _goalCollection.Find(x => x.Name == name).FirstOrDefaultAsync();
 }

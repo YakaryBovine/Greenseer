@@ -2,8 +2,10 @@
 
 namespace Greenseer.Services;
 
-public interface IMongoDBService
+public interface IMongoDbService
 {
-  public Task<List<Goal>> GetAsync();
-  public Task CreateAsync(Goal goal);
+  Task<List<Goal>> GetAsync();
+  Task CreateAsync(Goal goal);
+  Task DeleteGoal(string name);
+  Task<Goal?> GetGoal(string name);
 }

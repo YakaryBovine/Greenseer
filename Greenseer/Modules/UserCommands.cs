@@ -1,14 +1,13 @@
 ﻿using Discord.Interactions;
-using Greenseer.Models;
 using Greenseer.Services;
 
 namespace Greenseer.Modules;
 
 public sealed class UserCommands : InteractionModuleBase<SocketInteractionContext>
 {
-  private readonly IMongoDBService _mongoDbService;
+  private readonly IMongoDbService _mongoDbService;
 
-  public UserCommands(IMongoDBService mongoDbService)
+  public UserCommands(IMongoDbService mongoDbService)
   {
     _mongoDbService = mongoDbService;
   }
