@@ -6,7 +6,7 @@ public static class Bootstrapper
 {
   public static IServiceProvider ServiceProvider { get; set; }
   
-  private static IServiceCollection _serviceCollection;
+  public static IServiceCollection _serviceCollection;
   private static bool _isInitialized;
 
   public static void Init()

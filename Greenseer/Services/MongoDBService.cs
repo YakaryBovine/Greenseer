@@ -5,7 +5,7 @@ using MongoDB.Driver;
 
 namespace Greenseer.Services;
 
-public sealed class MongoDBService
+public sealed class MongoDBService : IMongoDBService
 {
   private readonly IMongoCollection<Goal> _goalCollection;
 

@@ -2,10 +2,10 @@
 using Discord.Interactions;
 using Discord.WebSocket;
 using Greenseer;
+using Greenseer.Models;
 using Greenseer.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Greenseer.Models;
 
 var config = new ConfigurationBuilder()
   .AddJsonFile("appsettings.json")
@@ -17,10 +17,12 @@ client.Log += Log;
 var interactionService = new InteractionService(client.Rest);
 
 Bootstrapper.Init();
+Bootstrapper.RegisterInstance(config);
 Bootstrapper.RegisterInstance(client);
 Bootstrapper.RegisterInstance(interactionService);
+Bootstrapper._serviceCollection.Configure<GoalDatabaseOptions>(config.GetSection(GoalDatabaseOptions.GoalDatabase));
 Bootstrapper.RegisterType<IInteractionHandler, InteractionHandler>();
-Bootstrapper.RegisterInstance(config);
+Bootstrapper.RegisterType<IMongoDBService, MongoDBService>();
 
 await MainAsync();
 
