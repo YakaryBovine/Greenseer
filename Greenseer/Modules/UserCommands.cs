@@ -36,7 +36,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     {
       Id = user.Id.ToString(),
       Name = user.Username,
-      Score = 0
+      Points = 0
     });
     await RespondAsync($"Registered {user.Username} to the ongoing game.");
   }
