@@ -16,7 +16,7 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
   [SlashCommand("addgoal", "Adds a new Goal type to the game.")]
   public async Task AddGoal(string name, string description, int pointValue)
   {
-    await _mongoDbService.CreateAsync(new Goal
+    await _mongoDbService.CreateGoal(new Goal
     {
       Name = name,
       Description = description,
