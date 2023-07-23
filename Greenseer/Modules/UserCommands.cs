@@ -80,7 +80,9 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
         eligibleGoals.Remove(existingGoal);
     }
 
-    var allPlayers = await _mongoDbService.GetPlayers();
+    var eligiblePlayerTargets = (await _mongoDbService.GetPlayers())
+      .Where(x => x.Id != player.Id)
+      .ToList();
     for (var i = 0; i < missingGoals; i++)
     {
       if (eligibleGoals.Count == 0)
@@ -90,7 +92,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       }
       var drawnGoal = eligibleGoals.GetRandom();
       if (drawnGoal.HasTarget) 
-        drawnGoal.Target = allPlayers.GetRandom();
+        drawnGoal.Target = eligiblePlayerTargets.GetRandom();
       
       eligibleGoals.Remove(drawnGoal);
       player.Goals.Add(drawnGoal);
