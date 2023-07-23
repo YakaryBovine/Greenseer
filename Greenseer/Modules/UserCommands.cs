@@ -104,7 +104,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     var player = await _mongoDbService.GetPlayer(user.Username);
     if (player == null)
     {
-      await RespondAsync("You are not registered. Register by using the /register command.");
+      await RespondAsync("You are not registered. Register by using the /register command.", ephemeral: true);
       return;
     }
 
@@ -112,7 +112,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
 
     if (listOfGoals.Count == 0)
     {
-      await RespondAsync("You have no Goals. Draw some with the /draw command.");
+      await RespondAsync("You have no Goals. Draw some with the /draw command.", ephemeral: true);
       return;
     }
     
