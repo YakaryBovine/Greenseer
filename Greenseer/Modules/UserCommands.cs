@@ -94,4 +94,29 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.Name} ({x.PointValue})**: {x.Description}"));
     await RespondAsync($"__**Your Goals**__ {Environment.NewLine}{readableListOfGoals}", ephemeral: true);
   }
+  
+  [SlashCommand("complete", "Completes the Goal with the specified name.")]
+  public async Task MyGoals(string goalName)
+  {
+    var user = Context.User;
+    var player = await _mongoDbService.GetPlayer(user.Username);
+    if (player == null)
+    {
+      await RespondAsync("You are not registered. Register by using the /register command.");
+      return;
+    }
+    
+    player.Goals ??= new List<Goal>();
+    var goalToComplete = player.Goals.FirstOrDefault(x => x.Name == goalName);
+    if (goalToComplete == null)
+    {
+      await RespondAsync($"You don't have a Goal with the name {goalName}.", ephemeral: true);
+      return;
+    }
+
+    player.Goals.Remove(goalToComplete);
+    player.Points += goalToComplete.PointValue;
+    await _mongoDbService.UpdatePlayer(player.Id!, player);
+    await RespondAsync($"{player.Name} has successfully completed the Goal {goalName}! They are awarded {goalToComplete.PointValue} Points.");
+  }
 }
