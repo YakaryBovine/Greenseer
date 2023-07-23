@@ -58,7 +58,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     var player = await _mongoDbService.GetPlayer(user.Username);
     if (player == null)
     {
-      await RespondAsync("You are not registered. Register by using the /register command.");
+      await RespondAsync("You are not registered. Register by using the /register command.", ephemeral: true);
       return;
     }
 
@@ -66,7 +66,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
 
     if (player.Goals.Count >= 5)
     {
-      await RespondAsync($"You already have {player.Goals.Count} Goals.");
+      await RespondAsync($"You already have {player.Goals.Count} Goals.", ephemeral: true);
       return;
     }
 
@@ -93,7 +93,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     
     await _mongoDbService.UpdatePlayer(player.Id!, player);
     
-    await RespondAsync("Successfully drew up to 5 Goals.");
+    await RespondAsync($"{player.Name} has successfully drawn up to 5 Goals.");
   }
   
   [SlashCommand("mygoals", "Shows you all of your incomplete Goals.")]
