@@ -71,10 +71,26 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     }
 
     var missingGoals = 5 - player.Goals.Count;
-    var availableGoals = await _mongoDbService.GetGoals();
-    for (var i = 0; i < missingGoals; i++)
-      player.Goals.Add(availableGoals[new Random().Next(0, availableGoals.Count-1)]);
+    var eligibleGoals = await _mongoDbService.GetGoals();
+    
+    foreach (var existingGoal in player.Goals)
+    {
+      if (eligibleGoals.Contains(existingGoal))
+        eligibleGoals.Remove(existingGoal);
+    }
 
+    for (var i = 0; i < missingGoals; i++)
+    {
+      if (eligibleGoals.Count == 0)
+      {
+        await RespondAsync("There are not enough unique Personal Goals left in the pool to draw a full hand.");
+        return;
+      }
+      var drawnGoal = eligibleGoals[new Random().Next(0, eligibleGoals.Count - 1)];
+      eligibleGoals.Remove(drawnGoal);
+      player.Goals.Add(drawnGoal);
+    }
+    
     await _mongoDbService.UpdatePlayer(player.Id!, player);
     
     await RespondAsync("Successfully drew up to 5 Goals.");
