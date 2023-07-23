@@ -36,7 +36,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   {
     var user = Context.User;
 
-    if (await _mongoDbService.GetPlayer(user.Username) != null)
+    if (await _mongoDbService.GetPlayer(user.Id.ToString()) != null)
     {
       await RespondAsync("You are already registered.");
       return;
@@ -56,7 +56,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   {
     var user = Context.User;
 
-    var player = await _mongoDbService.GetPlayer(user.Username);
+    var player = await _mongoDbService.GetPlayer(user.Id.ToString());
     if (player == null)
     {
       await RespondAsync("You are not registered. Register by using the /register command.", ephemeral: true);
@@ -105,7 +105,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   {
     var user = Context.User;
 
-    var player = await _mongoDbService.GetPlayer(user.Username);
+    var player = await _mongoDbService.GetPlayer(user.Id.ToString());
     if (player == null)
     {
       await RespondAsync("You are not registered. Register by using the /register command.", ephemeral: true);
@@ -128,7 +128,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   public async Task Complete(string goalName)
   {
     var user = Context.User;
-    var player = await _mongoDbService.GetPlayer(user.Username);
+    var player = await _mongoDbService.GetPlayer(user.Id.ToString());
     if (player == null)
     {
       await RespondAsync("You are not registered. Register by using the /register command.");
@@ -160,7 +160,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   public async Task Discard(string goalName)
   {
     var user = Context.User;
-    var player = await _mongoDbService.GetPlayer(user.Username);
+    var player = await _mongoDbService.GetPlayer(user.Id.ToString());
     if (player == null)
     {
       await RespondAsync("You are not registered. Register by using the /register command.");
