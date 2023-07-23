@@ -74,7 +74,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     var missingGoals = 5 - player.Goals.Count;
     var eligibleGoals = (await _mongoDbService.GetGoals())
       .Where(x => x.GoalType == GoalType.Personal)
-      .Where(x => !player.Goals.Contains(x))
+      .Where(x => !player.Goals.Select(playerGoal => playerGoal.Name).Contains(x.Name))
       .ToList();
 
     var eligiblePlayerTargets = (await _mongoDbService.GetPlayers())
@@ -141,7 +141,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       .ToList();
     eligibleGoals.AddRange(player.Goals);
     
-    var goalToComplete = eligibleGoals.FirstOrDefault(x => x.Name == goalName);
+    var goalToComplete = eligibleGoals.FirstOrDefault(x => x.GetParsedName() == goalName);
     if (goalToComplete == null)
     {
       await RespondAsync($"You don't have a Goal named {goalName}, nor is there a Universal Goal with that name.", ephemeral: true);
@@ -168,7 +168,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     }
     
     player.Goals ??= new List<Goal>();
-    var goalToComplete = player.Goals.FirstOrDefault(x => x.Name == goalName);
+    var goalToComplete = player.Goals.FirstOrDefault(x => x.GetParsedName() == goalName);
     if (goalToComplete == null)
     {
       await RespondAsync($"You don't have a Goal named {goalName}.", ephemeral: true);
