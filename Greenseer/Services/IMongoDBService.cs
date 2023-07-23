@@ -11,4 +11,5 @@ public interface IMongoDbService
   Task CreatePlayer(Player player);
   Task UpdatePlayer(string id, Player player);
   Task<Player?> GetPlayer(string userUsername);
+  Task<List<Player>> GetPlayers();
 }

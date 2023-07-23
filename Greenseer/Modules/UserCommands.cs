@@ -20,6 +20,15 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.Name} ({x.PointValue})**: {x.Description}"));
     await RespondAsync($"__**Goals**__ {Environment.NewLine}{readableListOfGoals}");
   }
+  
+  [SlashCommand("scores", "Shows the current Scores of every player.")]
+  public async Task Scores()
+  {
+    var listOfPlayers = await _mongoDbService.GetPlayers();
+    var orderedPlayers = listOfPlayers.OrderByDescending(x => x.Points);
+    var playerScores = string.Join(Environment.NewLine, orderedPlayers.Select(x => $"**{x.Name}**: {x.Points}"));
+    await RespondAsync($"__**Scores**__ {Environment.NewLine}{playerScores}");
+  }
 
   [SlashCommand("register", "Registers you as a player in the ongoing game.")]
   public async Task Register()

@@ -44,4 +44,6 @@ public sealed class MongoDbService : IMongoDbService
     await _playerCollection.ReplaceOneAsync(x => x.Id == id, player);
   
   public async Task<Player?> GetPlayer(string name) => await _playerCollection.Find(x => x.Name == name).FirstOrDefaultAsync();
+  
+  public async Task<List<Player>> GetPlayers() => await _playerCollection.Find(new BsonDocument()).ToListAsync();
 }
