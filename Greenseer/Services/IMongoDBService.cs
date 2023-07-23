@@ -9,5 +9,6 @@ public interface IMongoDbService
   Task DeleteGoal(string name);
   Task<Goal?> GetGoal(string name);
   Task CreatePlayer(Player player);
+  Task UpdatePlayer(string id, Player player);
   Task<Player?> GetPlayer(string userUsername);
 }

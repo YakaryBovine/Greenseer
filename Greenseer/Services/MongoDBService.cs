@@ -40,5 +40,8 @@ public sealed class MongoDbService : IMongoDbService
   
   public async Task CreatePlayer(Player player) => await _playerCollection.InsertOneAsync(player);
   
+  public async Task UpdatePlayer(string id, Player player) =>
+    await _playerCollection.ReplaceOneAsync(x => x.Id == id, player);
+  
   public async Task<Player?> GetPlayer(string name) => await _playerCollection.Find(x => x.Name == name).FirstOrDefaultAsync();
 }

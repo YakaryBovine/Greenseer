@@ -40,4 +40,34 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     });
     await RespondAsync($"Registered {user.Username} to the ongoing game.");
   }
+  
+  [SlashCommand("draw", "Draws Personal Goals from the deck until you have 5 total Goals.")]
+  public async Task Draw()
+  {
+    var user = Context.User;
+
+    var player = await _mongoDbService.GetPlayer(user.Username);
+    if (player == null)
+    {
+      await RespondAsync("You are not registered. Register by using the /register command.");
+      return;
+    }
+
+    player.Goals ??= new List<Goal>();
+
+    if (player.Goals.Count >= 5)
+    {
+      await RespondAsync($"You already have {player.Goals.Count} Goals.");
+      return;
+    }
+
+    var missingGoals = 5 - player.Goals.Count;
+    var availableGoals = await _mongoDbService.GetGoals();
+    for (var i = 0; i < missingGoals; i++)
+      player.Goals.Add(availableGoals[new Random().Next(0, availableGoals.Count-1)]);
+
+    await _mongoDbService.UpdatePlayer(player.Id!, player);
+    
+    await RespondAsync("Successfully drew up to 5 Goals.");
+  }
 }
