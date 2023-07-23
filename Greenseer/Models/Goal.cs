@@ -12,4 +12,16 @@ public sealed class Goal
 
   /// <summary>How many points the user gets when they complete the goal.</summary>
   public int PointValue { get; set; }
+  
+  /// <summary>Whether or not the Goal is targeted at a particular player.</summary>
+  public bool HasTarget { get; set; }
+  
+  /// <summary>The <see cref="Player"/> the <see cref="Goal"/> is targeted at, if any.</summary>
+  public Player? Target { get; set; }
+
+  /// <summary>Gets the <see cref="Name"/> after formatting rules have been applied.</summary>
+  public string GetParsedName() => Name.Replace("{target}", Target?.Name);
+  
+  /// <summary>Gets the <see cref="Description"/> after formatting rules have been applied.</summary>
+  public string GetParsedDescription() => Description.Replace("{target}", Target?.Name);
 }

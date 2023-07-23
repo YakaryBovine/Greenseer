@@ -14,13 +14,14 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
   }
   
   [SlashCommand("addgoal", "Adds a new Goal type to the game.")]
-  public async Task AddGoal(string name, string description, int pointValue)
+  public async Task AddGoal(string name, string description, int pointValue, bool hasTarget = false)
   {
     await _mongoDbService.CreateGoal(new Goal
     {
       Name = name,
       Description = description,
-      PointValue = pointValue
+      PointValue = pointValue,
+      HasTarget = hasTarget
     });
     await RespondAsync($"Successfully added {name} to the list of possible Goals.");
   }

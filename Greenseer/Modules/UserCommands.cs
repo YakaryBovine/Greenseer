@@ -1,4 +1,5 @@
 ﻿using Discord.Interactions;
+using Greenseer.Extensions;
 using Greenseer.Models;
 using Greenseer.Services;
 
@@ -79,6 +80,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
         eligibleGoals.Remove(existingGoal);
     }
 
+    var allPlayers = await _mongoDbService.GetPlayers();
     for (var i = 0; i < missingGoals; i++)
     {
       if (eligibleGoals.Count == 0)
@@ -86,7 +88,10 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
         await RespondAsync("There are not enough unique Personal Goals left in the pool to draw a full hand.");
         return;
       }
-      var drawnGoal = eligibleGoals[new Random().Next(0, eligibleGoals.Count - 1)];
+      var drawnGoal = eligibleGoals.GetRandom();
+      if (drawnGoal.HasTarget) 
+        drawnGoal.Target = allPlayers.GetRandom();
+      
       eligibleGoals.Remove(drawnGoal);
       player.Goals.Add(drawnGoal);
     }
@@ -116,7 +121,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       return;
     }
     
-    var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.Name} ({x.PointValue})**: {x.Description}"));
+    var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.GetParsedName()} ({x.PointValue})**: {x.GetParsedDescription()}"));
     await RespondAsync($"__**Your Goals**__ {Environment.NewLine}{readableListOfGoals}", ephemeral: true);
   }
   
