@@ -24,7 +24,8 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
       Name = name,
       Description = description,
       PointValue = pointValue,
-      HasTarget = hasTarget
+      HasTarget = hasTarget,
+      GoalType = goalType
     });
     await RespondAsync($"Successfully added {name} to the list of possible Goals.");
   }

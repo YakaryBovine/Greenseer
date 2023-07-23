@@ -14,10 +14,10 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     _mongoDbService = mongoDbService;
   }
   
-  [SlashCommand("allgoals", "Lists all of the Goals in the game.")]
-  public async Task AllGoals()
+  [SlashCommand("allgoals", "Lists all Goals of a particular type.")]
+  public async Task AllGoals(GoalType goalType)
   {
-    var listOfGoals = await _mongoDbService.GetGoals();
+    var listOfGoals = (await _mongoDbService.GetGoals()).Where(x => x.GoalType == goalType);
     var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.Name} ({x.PointValue})**: {x.Description}"));
     await RespondAsync($"__**Goals**__ {Environment.NewLine}{readableListOfGoals}");
   }
