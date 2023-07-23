@@ -19,6 +19,9 @@ public sealed class Goal
   /// <summary>The <see cref="Player"/> the <see cref="Goal"/> is targeted at, if any.</summary>
   public Player? Target { get; set; }
 
+  /// <summary>The type of the <see cref="Goal"/>, which determines some aspects of its behaviour.</summary>
+  public GoalType GoalType { get; set; }
+
   /// <summary>Gets the <see cref="Name"/> after formatting rules have been applied.</summary>
   public string GetParsedName() => Name.Replace("{target}", Target?.Name);
   

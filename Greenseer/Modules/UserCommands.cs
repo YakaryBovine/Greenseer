@@ -72,13 +72,10 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     }
 
     var missingGoals = 5 - player.Goals.Count;
-    var eligibleGoals = await _mongoDbService.GetGoals();
-    
-    foreach (var existingGoal in player.Goals)
-    {
-      if (eligibleGoals.Contains(existingGoal))
-        eligibleGoals.Remove(existingGoal);
-    }
+    var eligibleGoals = (await _mongoDbService.GetGoals())
+      .Where(x => x.GoalType == GoalType.Personal)
+      .Where(x => !player.Goals.Contains(x))
+      .ToList();
 
     var eligiblePlayerTargets = (await _mongoDbService.GetPlayers())
       .Where(x => x.Id != player.Id)

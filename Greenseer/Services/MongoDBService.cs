@@ -30,8 +30,11 @@ public sealed class MongoDbService : IMongoDbService
   }
 
   public async Task CreateGoal(Goal goal) => await _goalCollection.InsertOneAsync(goal);
-  
+
   public async Task<Goal?> GetGoal(string name) => await _goalCollection.Find(x => x.Name == name).FirstOrDefaultAsync();
+  
+  public async Task UpdateGoal(string name, Goal goal) =>
+    await _goalCollection.ReplaceOneAsync(x => x.Name == name, goal);
   
   public async Task<List<Goal>> GetGoals() => await _goalCollection.Find(new BsonDocument()).ToListAsync();
   
