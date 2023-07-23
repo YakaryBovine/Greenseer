@@ -13,8 +13,8 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     _mongoDbService = mongoDbService;
   }
   
-  [SlashCommand("listgoals", "Lists all of the Goals in the game.")]
-  public async Task ListGoals()
+  [SlashCommand("allgoals", "Lists all of the Goals in the game.")]
+  public async Task AllGoals()
   {
     var listOfGoals = await _mongoDbService.GetGoals();
     var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.Name} ({x.PointValue})**: {x.Description}"));
@@ -92,6 +92,6 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     }
     
     var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.Name} ({x.PointValue})**: {x.Description}"));
-    await RespondAsync($"__**Your Goals**__ {Environment.NewLine}{readableListOfGoals}");
+    await RespondAsync($"__**Your Goals**__ {Environment.NewLine}{readableListOfGoals}", ephemeral: true);
   }
 }
