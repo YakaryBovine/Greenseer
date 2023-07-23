@@ -136,14 +136,21 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     }
     
     player.Goals ??= new List<Goal>();
-    var goalToComplete = player.Goals.FirstOrDefault(x => x.Name == goalName);
+    var eligibleGoals = (await _mongoDbService.GetGoals())
+      .Where(x => x.GoalType is GoalType.Universal)
+      .ToList();
+    eligibleGoals.AddRange(player.Goals);
+    
+    var goalToComplete = eligibleGoals.FirstOrDefault(x => x.Name == goalName);
     if (goalToComplete == null)
     {
-      await RespondAsync($"You don't have a Goal named {goalName}.", ephemeral: true);
+      await RespondAsync($"You don't have a Goal named {goalName}, nor is there a Universal Goal with that name.", ephemeral: true);
       return;
     }
 
-    player.Goals.Remove(goalToComplete);
+    if (goalToComplete.GoalType is not GoalType.Universal)
+      player.Goals.Remove(goalToComplete);
+    
     player.Points += goalToComplete.PointValue;
     await _mongoDbService.UpdatePlayer(player.Id!, player);
     await RespondAsync($"{player.Name} has successfully completed {goalName}! They are awarded {goalToComplete.PointValue} Points.");
