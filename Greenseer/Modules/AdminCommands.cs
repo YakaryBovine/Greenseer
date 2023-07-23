@@ -1,9 +1,11 @@
-﻿using Discord.Interactions;
+﻿using Discord;
+using Discord.Interactions;
 using Greenseer.Models;
 using Greenseer.Services;
 
 namespace Greenseer.Modules;
 
+[RequireUserPermission(GuildPermission.Administrator)]
 public sealed class AdminCommands : InteractionModuleBase<SocketInteractionContext>
 {
   private readonly IMongoDbService _mongoDbService;
@@ -14,6 +16,7 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
   }
 
   [SlashCommand("addgoal", "Adds a new Goal type to the game.")]
+  [RequireUserPermission(GuildPermission.Administrator)]
   public async Task AddGoal(string name, string description, int pointValue, GoalType goalType = GoalType.Personal, bool hasTarget = false)
   {
     await _mongoDbService.CreateGoal(new Goal
@@ -27,6 +30,7 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
   }
 
   [SlashCommand("deletegoal", "Deletes the goal with the specified name.")]
+  [RequireUserPermission(GuildPermission.Administrator)]
   public async Task DeleteGoal(string name)
   {
     if (await _mongoDbService.GetGoal(name) == null)
@@ -37,20 +41,5 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
 
     await _mongoDbService.DeleteGoal(name);
     await RespondAsync($"Successfully deleted \"{name}\" from the list of possible Goals.");
-  }
-
-  [SlashCommand("migrategoals", "Fixes all goals in the database with any new data.")]
-  public async Task MigrateGoals()
-  {
-    var allGoals = await _mongoDbService.GetGoals();
-    foreach (var goal in allGoals)
-    {
-      if (goal.GoalType != null) 
-        continue;
-      goal.GoalType = GoalType.Personal;
-      await _mongoDbService.UpdateGoal(goal.Name, goal);
-    }
-
-    await RespondAsync($"Successfully migrated Goals.");
   }
 }
