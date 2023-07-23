@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Discord.WebSocket;
 using Greenseer.Models;
 using Greenseer.Services;
 
@@ -42,5 +43,29 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
 
     await _mongoDbService.DeleteGoal(name);
     await RespondAsync($"Successfully deleted \"{name}\" from the list of possible Goals.");
+  }
+  
+  [SlashCommand("givegoal", "Gives the specified Goal to a user.")]
+  [RequireUserPermission(GuildPermission.Administrator)]
+  public async Task GiveGoal(SocketGuildUser user, string goalName)
+  {
+    var player = await _mongoDbService.GetPlayer(user.Id.ToString());
+    if (player == null)
+    {
+      await RespondAsync($"{user.Username} is not registered.");
+      return;
+    }
+
+    var goal = await _mongoDbService.GetGoal(goalName);
+    
+    if (goal == null)
+    {
+      await RespondAsync($"There is no goal named {goalName}.");
+      return;
+    }
+    
+    player.Goals?.Add(goal);
+    await _mongoDbService.UpdatePlayer(player.Id!, player);
+    await RespondAsync($"Successfully added Goal {goalName} to {user.Username}.");
   }
 }
