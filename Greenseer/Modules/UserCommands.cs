@@ -70,4 +70,28 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     
     await RespondAsync("Successfully drew up to 5 Goals.");
   }
+  
+  [SlashCommand("mygoals", "Shows you all of your incomplete Goals.")]
+  public async Task MyGoals()
+  {
+    var user = Context.User;
+
+    var player = await _mongoDbService.GetPlayer(user.Username);
+    if (player == null)
+    {
+      await RespondAsync("You are not registered. Register by using the /register command.");
+      return;
+    }
+
+    var listOfGoals = player.Goals ?? new List<Goal>();
+
+    if (listOfGoals.Count == 0)
+    {
+      await RespondAsync("You have no Goals. Draw some with the /draw command.");
+      return;
+    }
+    
+    var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.Name} ({x.PointValue})**: {x.Description}"));
+    await RespondAsync($"__**Your Goals**__ {Environment.NewLine}{readableListOfGoals}");
+  }
 }
