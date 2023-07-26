@@ -26,23 +26,24 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     }
 
     var alreadyResponded = false;
-    var i = 0;
+    var page = 0;
     const int goalsPerMessage = 10;
     while (listOfGoals.Any())
     {
-      if (listOfGoals.Count <= i*goalsPerMessage)
+      if (listOfGoals.Count <= page*goalsPerMessage)
         return;
       
-      var goalsToDisplay = listOfGoals.Skip(i*goalsPerMessage).Take(goalsPerMessage);
+      var goalsToDisplay = listOfGoals.Skip(page*goalsPerMessage).Take(goalsPerMessage);
       var readableListOfGoals = string.Join(Environment.NewLine, goalsToDisplay.Select(x => $"**{x.Name} ({x.PointValue})**: {x.Description}"));
+      var responseMessage = $"__**{goalType.ToString()} Goals (Page {page+1})**__ {Environment.NewLine}{readableListOfGoals}";
       if (!alreadyResponded)
       {
-        await RespondAsync($"__**Goals**__ {Environment.NewLine}{readableListOfGoals}");
+        await RespondAsync(responseMessage);
         alreadyResponded = true;
       }
       else
-        await FollowupAsync($"__**Goals**__ {Environment.NewLine}{readableListOfGoals}");
-      i++;
+        await FollowupAsync(responseMessage);
+      page++;
     }
   }
   
