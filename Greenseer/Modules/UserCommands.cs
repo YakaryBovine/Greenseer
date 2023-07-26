@@ -17,9 +17,33 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   [SlashCommand("allgoals", "Lists all Goals of a particular type.")]
   public async Task AllGoals(GoalType goalType)
   {
-    var listOfGoals = (await _mongoDbService.GetGoals()).Where(x => x.GoalType == goalType);
-    var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.Name} ({x.PointValue})**: {x.Description}"));
-    await RespondAsync($"__**Goals**__ {Environment.NewLine}{readableListOfGoals}");
+    var listOfGoals = (await _mongoDbService.GetGoals()).Where(x => x.GoalType == goalType).ToList();
+
+    if (listOfGoals.Count == 0)
+    {
+      await RespondAsync($"There are no {goalType.ToString()} Goals registered in the system.");
+      return;
+    }
+
+    var alreadyResponded = false;
+    var i = 0;
+    const int goalsPerMessage = 10;
+    while (listOfGoals.Any())
+    {
+      if (listOfGoals.Count <= i*goalsPerMessage)
+        return;
+      
+      var goalsToDisplay = listOfGoals.Skip(i*goalsPerMessage).Take(goalsPerMessage);
+      var readableListOfGoals = string.Join(Environment.NewLine, goalsToDisplay.Select(x => $"**{x.Name} ({x.PointValue})**: {x.Description}"));
+      if (!alreadyResponded)
+      {
+        await RespondAsync($"__**Goals**__ {Environment.NewLine}{readableListOfGoals}");
+        alreadyResponded = true;
+      }
+      else
+        await FollowupAsync($"__**Goals**__ {Environment.NewLine}{readableListOfGoals}");
+      i++;
+    }
   }
   
   [SlashCommand("scores", "Shows the current Scores of every player.")]
