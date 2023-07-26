@@ -27,7 +27,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
 
     var alreadyResponded = false;
     var page = 0;
-    const int goalsPerMessage = 10;
+    const int goalsPerMessage = 15;
     while (listOfGoals.Any())
     {
       if (listOfGoals.Count <= page*goalsPerMessage)
