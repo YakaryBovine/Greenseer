@@ -1,8 +1,9 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using Mongo.Migration.Documents;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Greenseer.Models;
 
-public sealed class Goal
+public sealed class Goal : IDocument
 {
   [BsonId]
   public string Name { get; set; } = null!;
@@ -27,4 +28,7 @@ public sealed class Goal
   
   /// <summary>Gets the <see cref="Description"/> after formatting rules have been applied.</summary>
   public string GetParsedDescription() => Description.Replace("{target}", Target?.Name);
+
+  /// <summary>Indicates the current version of the entity for migration purposes.</summary>
+  public DocumentVersion Version { get; set; }
 }

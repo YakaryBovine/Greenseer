@@ -6,6 +6,7 @@ using Greenseer.Models;
 using Greenseer.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Mongo.Migration.Startup.DotNetCore;
 
 var config = new ConfigurationBuilder()
   .AddJsonFile("appsettings.json")
@@ -23,6 +24,7 @@ Bootstrapper.ServiceCollection.AddSingleton(client);
 Bootstrapper.ServiceCollection.AddSingleton(interactionService);
 Bootstrapper.ServiceCollection.AddSingleton<IInteractionHandler, InteractionHandler>();
 Bootstrapper.ServiceCollection.AddSingleton<IMongoDbService, MongoDbService>();
+Bootstrapper.ServiceCollection.AddMigration();
 Bootstrapper.InitializeServiceProvider();
 
 await MainAsync();
