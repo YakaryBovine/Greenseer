@@ -1,32 +1,28 @@
-﻿using Mongo.Migration.Migrations.Database;
+﻿using Greenseer.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Greenseer.Migrations;
 
-public class ChangeGoalsToPlayerGoals : DatabaseMigration
+public sealed class ChangeGoalsToPlayerGoals : IMigration
 {
-  public ChangeGoalsToPlayerGoals() : base("0.0.1")
-  {
-  }
+  public DatabaseVersion Version { get; } = new(0, 0, 0, 3);
 
-  public override void Up(IMongoDatabase database)
+  public void Migrate(IMongoDatabase database)
   {
-    var collection = database.GetCollection<BsonDocument>("Player");
-    var documents = collection.Find(new BsonDocument()).ToList();
-    foreach (var document in documents)
+    var collection = database.GetCollection<BsonDocument>("Players");
+    var players = collection.Find(new BsonDocument()).ToList();
+    foreach (var player in players)
     {
-      foreach (var goal in document["Goals"].AsBsonArray)
+      foreach (var goal in player["Goals"].AsBsonArray)
       {
-        goal["Description"] = null;
-        goal["PointValue"] = null;
-        goal["GoalType"] = null;
+        var goalDocument = goal.AsBsonDocument;
+        goalDocument.Remove("Description");
+        goalDocument.Remove("PointValue");
+        goalDocument.Remove("GoalType");
+        goalDocument.Remove("HasTarget");
       }
+      collection.ReplaceOne(x => x["_id"] == player["_id"], player);
     }
-  }
-
-  public override void Down(IMongoDatabase database)
-  {
-    throw new NotImplementedException();
   }
 }

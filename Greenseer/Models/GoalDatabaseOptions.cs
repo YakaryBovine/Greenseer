@@ -8,6 +8,8 @@ public sealed class GoalDatabaseOptions
 
   public string DatabaseName { get; set; } = null!;
 
+  public string DatabaseVersionCollectionName { get; set; } = null!;
+  
   public string GoalsCollectionName { get; set; } = null!;
   
   public string PlayerCollectionName { get; set; } = null!;

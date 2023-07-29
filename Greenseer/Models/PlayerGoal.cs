@@ -1,12 +1,10 @@
-﻿using Mongo.Migration.Documents;
-using Mongo.Migration.Documents.Attributes;
+﻿using Greenseer.Migrations;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace Greenseer.Models;
 
 /// <summary>A <see cref="Goal"/> held by a player.</summary>
-[CollectionLocation("PlayerGoals")]
-public sealed class PlayerGoal : IDocument
+public sealed class PlayerGoal
 {
   /// <summary>The name of the <see cref="Goal"/> the player can complete.</summary>
   public string GoalName { get; set; }
@@ -23,7 +21,4 @@ public sealed class PlayerGoal : IDocument
   
   /// <summary>Gets the <see cref="Goal"/> description after formatting rules have been applied.</summary>
   public string GetParsedDescription() => Goal.Description.Replace("{target}", Target?.Name);
-  
-  /// <summary>Indicates the current version of the entity for migration purposes.</summary>
-  public DocumentVersion Version { get; set; }
 }

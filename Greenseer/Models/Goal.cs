@@ -1,11 +1,8 @@
-﻿using Mongo.Migration.Documents;
-using Mongo.Migration.Documents.Attributes;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
 namespace Greenseer.Models;
 
-[CollectionLocation("Goals")]
-public sealed class Goal : IDocument
+public sealed class Goal
 {
   [BsonId]
   public string Name { get; set; } = null!;
@@ -21,7 +18,4 @@ public sealed class Goal : IDocument
 
   /// <summary>The type of the <see cref="Goal"/>, which determines some aspects of its behaviour.</summary>
   public GoalType GoalType { get; set; }
-
-  /// <summary>Indicates the current version of the entity for migration purposes.</summary>
-  public DocumentVersion Version { get; set; }
 }

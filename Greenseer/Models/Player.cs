@@ -1,12 +1,9 @@
-﻿using Mongo.Migration.Documents;
-using Mongo.Migration.Documents.Attributes;
+﻿using Greenseer.Migrations;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace Greenseer.Models;
 
-[RuntimeVersion("0.0.1")]
-[CollectionLocation("Players")]
-public class Player : IDocument
+public class Player
 {
   /// <summary>The player's ID according to Discord.</summary>
   [BsonId]
@@ -20,7 +17,4 @@ public class Player : IDocument
 
   /// <summary>The <see cref="Goal"/>s this player can complete to gain points.</summary>
   public List<PlayerGoal> Goals { get; set; } = null!;
-  
-  /// <summary>Indicates the current version of the entity for migration purposes.</summary>
-  public DocumentVersion Version { get; set; }
 }

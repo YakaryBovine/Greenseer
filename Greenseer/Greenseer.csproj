@@ -16,7 +16,6 @@
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="7.0.1" />
         <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
-        <PackageReference Include="Mongo.Migration" Version="3.1.4" />
         <PackageReference Include="MongoDB.Bson" Version="2.20.0" />
         <PackageReference Include="MongoDB.Driver" Version="2.20.0" />
     </ItemGroup>
@@ -28,8 +27,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="Services\MigrationService.cs" />
-      <Compile Remove="Services\IMigrationService.cs" />
       <Compile Remove="Migrations\MigratePlayerGoals.cs" />
     </ItemGroup>
 

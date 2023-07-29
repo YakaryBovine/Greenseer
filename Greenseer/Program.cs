@@ -7,7 +7,6 @@ using Greenseer.Repositories;
 using Greenseer.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Mongo.Migration.Startup.DotNetCore;
 using MongoDB.Driver;
 
 var configurationRoot = new ConfigurationBuilder()
@@ -28,8 +27,9 @@ Bootstrapper.ServiceCollection.AddSingleton<IMongoClient>(new MongoClient("mongo
 Bootstrapper.ServiceCollection.AddSingleton<IInteractionHandler, InteractionHandler>();
 Bootstrapper.ServiceCollection.AddSingleton<IMongoDbService, MongoDbService>();
 Bootstrapper.ServiceCollection.AddSingleton<IRepository<Player>, PlayerRepository>();
-Bootstrapper.ServiceCollection.AddMigration();
+Bootstrapper.ServiceCollection.AddSingleton<IMigrationService, MigrationService>();
 Bootstrapper.InitializeServiceProvider();
+Bootstrapper.ServiceProvider.GetRequiredService<IMigrationService>().Migrate();
 
 await MainAsync();
 
