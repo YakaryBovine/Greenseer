@@ -1,9 +1,8 @@
-﻿using Mongo.Migration.Documents;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
 namespace Greenseer.Models;
 
-public sealed class Goal : IDocument
+public sealed class Goal
 {
   [BsonId]
   public string Name { get; set; } = null!;
@@ -16,19 +15,7 @@ public sealed class Goal : IDocument
   
   /// <summary>Whether or not the Goal is targeted at a particular player.</summary>
   public bool HasTarget { get; set; }
-  
-  /// <summary>The <see cref="Player"/> the <see cref="Goal"/> is targeted at, if any.</summary>
-  public Player? Target { get; set; }
 
   /// <summary>The type of the <see cref="Goal"/>, which determines some aspects of its behaviour.</summary>
   public GoalType GoalType { get; set; }
-
-  /// <summary>Gets the <see cref="Name"/> after formatting rules have been applied.</summary>
-  public string GetParsedName() => Name.Replace("{target}", Target?.Name);
-  
-  /// <summary>Gets the <see cref="Description"/> after formatting rules have been applied.</summary>
-  public string GetParsedDescription() => Description.Replace("{target}", Target?.Name);
-
-  /// <summary>Indicates the current version of the entity for migration purposes.</summary>
-  public DocumentVersion Version { get; set; }
 }

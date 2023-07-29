@@ -64,7 +64,10 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
       return;
     }
     
-    player.Goals?.Add(goal);
+    player.Goals?.Add(new PlayerGoal
+    {
+      GoalName = goal.Name
+    });
     await _mongoDbService.UpdatePlayer(player.Id!, player);
     await RespondAsync($"Successfully added Goal {goalName} to {user.Username}.");
   }

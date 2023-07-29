@@ -11,16 +11,15 @@ public sealed class MongoDbService : IMongoDbService
   private readonly IMongoCollection<Goal> _goalCollection;
   private readonly IMongoCollection<Player> _playerCollection;
 
-  public MongoDbService(IOptions<GoalDatabaseOptions> mongoDbSettings)
+  public MongoDbService(IMongoClient mongoClient, IOptions<GoalDatabaseOptions> mongoDbSettings)
   {
-    var client = new MongoClient(mongoDbSettings.Value.ConnectionString);
-    var database = client.GetDatabase(mongoDbSettings.Value.DatabaseName);
+    var database = mongoClient.GetDatabase(mongoDbSettings.Value.DatabaseName);
     _goalCollection = database.GetCollection<Goal>(mongoDbSettings.Value.GoalsCollectionName);
     _playerCollection = database.GetCollection<Player>(mongoDbSettings.Value.PlayerCollectionName);
 
     try
     {
-      client.GetDatabase("admin").RunCommand<BsonDocument>(new BsonDocument("ping", 1));
+      mongoClient.GetDatabase("admin").RunCommand<BsonDocument>(new BsonDocument("ping", 1));
       Logger.Log(LogSeverity.Info, nameof(MongoDbService), "Successfully connected to MongoDB deployment.");
     }
     catch (Exception ex)
