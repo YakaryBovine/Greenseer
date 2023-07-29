@@ -12,15 +12,9 @@ public sealed class PlayerRepository : IRepository<Player>
     _mongoDbService = mongoDbService;
   }
 
-  public Task Create(Player player)
-  {
-    throw new NotImplementedException();
-  }
+  public async Task Create(Player player) => await _mongoDbService.CreatePlayer(player);
 
-  public Task Update(string id, Player player)
-  {
-    throw new NotImplementedException();
-  }
+  public async Task Update(string id, Player player) => await _mongoDbService.UpdatePlayer(id, player);
 
   public async Task<Player?> Get(string id)
   {
@@ -34,8 +28,15 @@ public sealed class PlayerRepository : IRepository<Player>
     return player;
   }
 
-  public Task<List<Player>> GetAll()
+  public async Task<List<Player>> GetAll()
   {
-    throw new NotImplementedException();
+    var players = await _mongoDbService.GetPlayers();
+    foreach (var player in players)
+    {
+      foreach (var goal in player.Goals) 
+        goal.Goal = await _mongoDbService.GetGoal(goal.GoalName) ?? throw new Exception();
+    }
+    
+    return players;
   }
 }

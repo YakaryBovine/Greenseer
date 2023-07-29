@@ -1,4 +1,5 @@
-﻿using Discord.Interactions;
+﻿using Discord;
+using Discord.Interactions;
 using Greenseer.Extensions;
 using Greenseer.Models;
 using Greenseer.Repositories;
@@ -53,10 +54,17 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   [SlashCommand("scores", "Shows the current Scores of every player.")]
   public async Task Scores()
   {
-    var listOfPlayers = await _mongoDbService.GetPlayers();
-    var orderedPlayers = listOfPlayers.OrderByDescending(x => x.Points);
-    var playerScores = string.Join(Environment.NewLine, orderedPlayers.Select(x => $"**{x.Name}**: {x.Points}"));
-    await RespondAsync($"__**Scores**__ {Environment.NewLine}{playerScores}");
+    try
+    {
+      var listOfPlayers = await _playerRepository.GetAll();
+      var orderedPlayers = listOfPlayers.OrderByDescending(x => x.Points);
+      var playerScores = string.Join(Environment.NewLine, orderedPlayers.Select(x => $"**{x.Name}**: {x.Points}"));
+      await RespondAsync($"__**Scores**__ {Environment.NewLine}{playerScores}");
+    }
+    catch (Exception ex)
+    {
+      Logger.Log(LogSeverity.Error, nameof(Scores), ex.Message, ex);
+    }
   }
 
   [SlashCommand("register", "Registers you as a player in the ongoing game.")]
@@ -64,7 +72,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   {
     var user = Context.User;
 
-    if (await _mongoDbService.GetPlayer(user.Id.ToString()) != null)
+    if (await _playerRepository.Get(user.Id.ToString()) != null)
     {
       await RespondAsync("You are already registered.");
       return;
@@ -84,7 +92,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   {
     var user = Context.User;
 
-    var player = await _mongoDbService.GetPlayer(user.Id.ToString());
+    var player = await _playerRepository.Get(user.Id.ToString());
     if (player == null)
     {
       await RespondAsync("You are not registered. Register by using the /register command.", ephemeral: true);
@@ -103,7 +111,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       .Where(x => !player.Goals.Select(playerGoal => playerGoal.GoalName).Contains(x.Name))
       .ToList();
 
-    var eligiblePlayerTargets = (await _mongoDbService.GetPlayers())
+    var eligiblePlayerTargets = (await _playerRepository.GetAll())
       .Where(x => x.Id != player.Id)
       .ToList();
     for (var i = 0; i < missingGoals; i++)
@@ -133,7 +141,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   {
     var user = Context.User;
 
-    var player = await _mongoDbService.GetPlayer(user.Id.ToString());
+    var player = await _playerRepository.Get(user.Id.ToString());
     if (player == null)
     {
       await RespondAsync("You are not registered. Register by using the /register command.", ephemeral: true);
@@ -156,7 +164,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   public async Task Complete(string goalName)
   {
     var user = Context.User;
-    var player = await _mongoDbService.GetPlayer(user.Id.ToString());
+    var player = await _playerRepository.Get(user.Id.ToString());
     if (player == null)
     {
       await RespondAsync("You are not registered. Register by using the /register command.");

@@ -6,7 +6,7 @@ namespace Greenseer.Migrations;
 
 public sealed class ChangeGoalsToPlayerGoals : IMigration
 {
-  public DatabaseVersion Version { get; } = new(0, 0, 0, 3);
+  public DatabaseVersion Version { get; } = new(0, 0, 0, 4);
 
   public void Migrate(IMongoDatabase database)
   {
@@ -17,10 +17,8 @@ public sealed class ChangeGoalsToPlayerGoals : IMigration
       foreach (var goal in player["Goals"].AsBsonArray)
       {
         var goalDocument = goal.AsBsonDocument;
-        goalDocument.Remove("Description");
-        goalDocument.Remove("PointValue");
-        goalDocument.Remove("GoalType");
-        goalDocument.Remove("HasTarget");
+        goalDocument["GoalName"] = goalDocument["_id"];
+        goalDocument.Remove("_id");
       }
       collection.ReplaceOne(x => x["_id"] == player["_id"], player);
     }
