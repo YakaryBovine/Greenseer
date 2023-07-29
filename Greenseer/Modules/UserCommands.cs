@@ -1,6 +1,7 @@
 ﻿using Discord.Interactions;
 using Greenseer.Extensions;
 using Greenseer.Models;
+using Greenseer.Repositories;
 using Greenseer.Services;
 
 namespace Greenseer.Modules;
@@ -8,10 +9,12 @@ namespace Greenseer.Modules;
 public sealed class UserCommands : InteractionModuleBase<SocketInteractionContext>
 {
   private readonly IMongoDbService _mongoDbService;
+  private readonly IRepository<Player> _playerRepository;
 
-  public UserCommands(IMongoDbService mongoDbService)
+  public UserCommands(IMongoDbService mongoDbService, IRepository<Player> playerRepository)
   {
     _mongoDbService = mongoDbService;
+    _playerRepository = playerRepository;
   }
   
   [SlashCommand("allgoals", "Lists all Goals of a particular type.")]
@@ -88,8 +91,6 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       return;
     }
 
-    player.Goals ??= new List<Goal>();
-
     if (player.Goals.Count >= 5)
     {
       await RespondAsync($"You already have {player.Goals.Count} Goals.", ephemeral: true);
@@ -99,7 +100,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     var missingGoals = 5 - player.Goals.Count;
     var eligibleGoals = (await _mongoDbService.GetGoals())
       .Where(x => x.GoalType == GoalType.Personal)
-      .Where(x => !player.Goals.Select(playerGoal => playerGoal.Name).Contains(x.Name))
+      .Where(x => !player.Goals.Select(playerGoal => playerGoal.GoalName).Contains(x.Name))
       .ToList();
 
     var eligiblePlayerTargets = (await _mongoDbService.GetPlayers())
@@ -113,11 +114,13 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
         return;
       }
       var drawnGoal = eligibleGoals.GetRandom();
-      if (drawnGoal.HasTarget) 
-        drawnGoal.Target = eligiblePlayerTargets.GetRandom();
-      
+
       eligibleGoals.Remove(drawnGoal);
-      player.Goals.Add(drawnGoal);
+      player.Goals.Add(new PlayerGoal
+      {
+        GoalName = drawnGoal.Name,
+        Target = drawnGoal.HasTarget ? eligiblePlayerTargets.GetRandom() : null
+      });
     }
     
     await _mongoDbService.UpdatePlayer(player.Id!, player);
@@ -137,7 +140,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       return;
     }
 
-    var listOfGoals = player.Goals ?? new List<Goal>();
+    var listOfGoals = player.Goals;
 
     if (listOfGoals.Count == 0)
     {
@@ -145,7 +148,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       return;
     }
     
-    var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.GetParsedName()} ({x.PointValue})**: {x.GetParsedDescription()}"));
+    var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.GetParsedName()} ({x.Goal.PointValue})**: {x.GetParsedDescription()}"));
     await RespondAsync($"__**Your Goals**__ {Environment.NewLine}{readableListOfGoals}", ephemeral: true);
   }
   
@@ -159,14 +162,14 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       await RespondAsync("You are not registered. Register by using the /register command.");
       return;
     }
-    
-    player.Goals ??= new List<Goal>();
-    var eligibleGoals = (await _mongoDbService.GetGoals())
+
+    var universalGoals = (await _mongoDbService.GetGoals())
       .Where(x => x.GoalType is GoalType.Universal)
       .ToList();
-    eligibleGoals.AddRange(player.Goals);
-    
-    var goalToComplete = eligibleGoals.FirstOrDefault(x => x.GetParsedName() == goalName);
+
+    var goalToComplete = universalGoals.FirstOrDefault(x => x.Name == goalName) ??
+                         player.Goals.FirstOrDefault(x => x.GetParsedName() == goalName)?.Goal;
+
     if (goalToComplete == null)
     {
       await RespondAsync($"You don't have a Goal named {goalName}, nor is there a Universal Goal with that name.", ephemeral: true);
@@ -174,7 +177,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     }
 
     if (goalToComplete.GoalType is not GoalType.Universal)
-      player.Goals.Remove(goalToComplete);
+      player.Goals.Remove(player.Goals.First(x => x.GoalName == goalToComplete.Name));
     
     player.Points += goalToComplete.PointValue;
     await _mongoDbService.UpdatePlayer(player.Id!, player);
@@ -185,14 +188,13 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   public async Task Discard(string goalName)
   {
     var user = Context.User;
-    var player = await _mongoDbService.GetPlayer(user.Id.ToString());
+    var player = await _playerRepository.Get(user.Id.ToString());
     if (player == null)
     {
       await RespondAsync("You are not registered. Register by using the /register command.");
       return;
     }
-    
-    player.Goals ??= new List<Goal>();
+
     var goalToComplete = player.Goals.FirstOrDefault(x => x.GetParsedName() == goalName);
     if (goalToComplete == null)
     {
