@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Greenseer.Exceptions;
 using Greenseer.Models;
 using Greenseer.Repositories;
 using Greenseer.Services;
@@ -37,6 +38,43 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
     await RespondAsync($"Successfully added {name} to the list of possible Goals.");
   }
 
+  [SlashCommand("session", "Changes the active game session to the one with the specified name.")]
+  [RequireUserPermission(GuildPermission.Administrator)]
+  public async Task SetActiveSession(string sessionName)
+  {
+    var settings = await _globalSettingsRepository.Get(GlobalSettingsId);
+
+    if (settings == null)
+      throw new DocumentNotFoundException(typeof(GlobalSettings), GlobalSettingsId);
+
+    if (settings.ActiveSessionId == sessionName)
+    {
+      await RespondAsync($"The active game session is already {sessionName}.");
+      return;
+    }
+
+    var session = await _sessionRepository.Get(sessionName);
+    
+    if (session == null)
+    {
+      session = new Session
+      {
+        Name = sessionName
+      };
+      await _sessionRepository.Create(session);
+      settings.ActiveSessionId = session.Name;
+      await _globalSettingsRepository.Update(settings.Id, settings);
+      await RespondAsync($"Created a new session named {session.Name}.");
+    }
+    else
+    {
+      settings.ActiveSessionId = sessionName;
+      await _globalSettingsRepository.Update(settings.Id, settings);
+
+      await RespondAsync($"Active game session changed to {session.Name}.");
+    }
+  }
+  
   [SlashCommand("deletegoal", "Deletes the goal with the specified name.")]
   [RequireUserPermission(GuildPermission.Administrator)]
   public async Task DeleteGoal(string name)
