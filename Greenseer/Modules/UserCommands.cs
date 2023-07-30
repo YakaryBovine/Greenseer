@@ -228,6 +228,30 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     await RespondAsync($"{player.Name} has successfully completed {goalName}! They are awarded {goalToComplete.PointValue} Points.");
   }
   
+  [SlashCommand("discardall", "Discards all of your Goals.")]
+  public async Task DiscardAll()
+  {
+    var user = Context.User;
+    var activeSession = await GetActiveSession();
+    var player = activeSession.Players.FirstOrDefault(x => x.Id == user.Id.ToString());
+    
+    if (player == null)
+    {
+      await RespondAsync("You are not registered. Register by using the /register command.", ephemeral: true);
+      return;
+    }
+
+    if (player.Goals == null)
+    {
+      await RespondAsync("You don't have any Goals to discard.", ephemeral: true);
+      return;
+    }
+
+    player.Goals = new List<Goal>();
+    await _sessionRepository.Update(activeSession.Name, activeSession);
+    await RespondAsync($"{player.Name} has discarded all of their Goals.");
+  }
+  
   [SlashCommand("discard", "Discards the Goal with the specified name.")]
   public async Task Discard(string goalName)
   {
