@@ -1,4 +1,4 @@
-﻿using Greenseer.Models;
+﻿using Greenseer.Services;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -6,7 +6,7 @@ namespace Greenseer.Migrations;
 
 public sealed class RemoveTargetFromGoals : IMigration
 {
-  public DatabaseVersion Version { get; } = new(0, 0, 0, 5);
+  public Version Version { get; } = new(0, 0, 0, 5);
 
   public void Migrate(IMongoDatabase database)
   {

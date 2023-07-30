@@ -1,7 +1,9 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Greenseer.Exceptions;
 using Greenseer.Models;
+using Greenseer.Repositories;
 using Greenseer.Services;
 
 namespace Greenseer.Modules;
@@ -10,10 +12,15 @@ namespace Greenseer.Modules;
 public sealed class AdminCommands : InteractionModuleBase<SocketInteractionContext>
 {
   private readonly IMongoDbService _mongoDbService;
+  private readonly IRepository<Session> _sessionRepository;
+  private readonly IRepository<GlobalSettings> _globalSettingsRepository;
+  private const string GlobalSettingsId = "0";
 
-  public AdminCommands(IMongoDbService mongoDbService)
+  public AdminCommands(IMongoDbService mongoDbService, IRepository<Session> sessionRepository, IRepository<GlobalSettings> globalSettingsRepository)
   {
     _mongoDbService = mongoDbService;
+    _sessionRepository = sessionRepository;
+    _globalSettingsRepository = globalSettingsRepository;
   }
 
   [SlashCommand("addgoal", "Adds a new Goal type to the game.")]
@@ -31,6 +38,43 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
     await RespondAsync($"Successfully added {name} to the list of possible Goals.");
   }
 
+  [SlashCommand("session", "Changes the active game session to the one with the specified name.")]
+  [RequireUserPermission(GuildPermission.Administrator)]
+  public async Task SetActiveSession(string sessionName)
+  {
+    var settings = await _globalSettingsRepository.Get(GlobalSettingsId);
+
+    if (settings == null)
+      throw new DocumentNotFoundException(typeof(GlobalSettings), GlobalSettingsId);
+
+    if (settings.ActiveSessionId == sessionName)
+    {
+      await RespondAsync($"The active game session is already {sessionName}.");
+      return;
+    }
+
+    var session = await _sessionRepository.Get(sessionName);
+    
+    if (session == null)
+    {
+      session = new Session
+      {
+        Name = sessionName
+      };
+      await _sessionRepository.Create(session);
+      settings.ActiveSessionId = session.Name;
+      await _globalSettingsRepository.Update(settings.Id, settings);
+      await RespondAsync($"Created a new session named {session.Name}.");
+    }
+    else
+    {
+      settings.ActiveSessionId = sessionName;
+      await _globalSettingsRepository.Update(settings.Id, settings);
+
+      await RespondAsync($"Active game session changed to {session.Name}.");
+    }
+  }
+  
   [SlashCommand("deletegoal", "Deletes the goal with the specified name.")]
   [RequireUserPermission(GuildPermission.Administrator)]
   public async Task DeleteGoal(string name)
@@ -49,7 +93,8 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
   [RequireUserPermission(GuildPermission.Administrator)]
   public async Task GiveGoal(SocketGuildUser user, string goalName)
   {
-    var player = await _mongoDbService.GetPlayer(user.Id.ToString());
+    var activeSession = await GetActiveSession();
+    var player = activeSession.Players.FirstOrDefault(x => x.Id == user.Id.ToString());
     if (player == null)
     {
       await RespondAsync($"{user.Username} is not registered.");
@@ -64,11 +109,14 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
       return;
     }
     
-    player.Goals?.Add(new PlayerGoal
-    {
-      GoalName = goal.Name
-    });
-    await _mongoDbService.UpdatePlayer(player.Id!, player);
+    player.Goals.Add(goal);
+    await _sessionRepository.Update(activeSession.Name, activeSession);
     await RespondAsync($"Successfully added Goal {goalName} to {user.Username}.");
+  }
+  
+  private async Task<Session> GetActiveSession()
+  {
+    var settings = await _globalSettingsRepository.Get(GlobalSettingsId);
+    return await _sessionRepository.Get(settings.ActiveSessionId);
   }
 }

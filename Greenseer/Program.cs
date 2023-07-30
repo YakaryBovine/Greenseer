@@ -26,16 +26,19 @@ Bootstrapper.ServiceCollection.AddSingleton(interactionService);
 Bootstrapper.ServiceCollection.AddSingleton<IMongoClient>(new MongoClient("mongodb://localhost:27017"));
 Bootstrapper.ServiceCollection.AddSingleton<IInteractionHandler, InteractionHandler>();
 Bootstrapper.ServiceCollection.AddSingleton<IMongoDbService, MongoDbService>();
-Bootstrapper.ServiceCollection.AddSingleton<IRepository<Player>, PlayerRepository>();
+Bootstrapper.ServiceCollection.AddSingleton<IRepository<Session>, SessionRepository>();
+Bootstrapper.ServiceCollection.AddSingleton<IRepository<GlobalSettings>, GlobalSettingsRepository>();
 Bootstrapper.ServiceCollection.AddSingleton<IMigrationService, MigrationService>();
+Bootstrapper.ServiceCollection.AddSingleton<IDatabaseSeedingService, DatabaseSeedingService>();
 Bootstrapper.InitializeServiceProvider();
-Bootstrapper.ServiceProvider.GetRequiredService<IMigrationService>().Migrate();
 
 await MainAsync();
 
 async Task MainAsync()
 {
   await Bootstrapper.ServiceProvider.GetRequiredService<IInteractionHandler>().InitializeAsync();
+  await Bootstrapper.ServiceProvider.GetRequiredService<IDatabaseSeedingService>().SeedDatabaseAsync();
+  await Bootstrapper.ServiceProvider.GetRequiredService<IMigrationService>().Migrate();
   var token = configurationRoot.GetRequiredSection("Discord")["DiscordBotToken"];
   if (string.IsNullOrWhiteSpace(token))
   {

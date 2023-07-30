@@ -1,9 +1,8 @@
-﻿using Greenseer.Migrations;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
 namespace Greenseer.Models;
 
-public class Player
+public sealed class Player
 {
   /// <summary>The player's ID according to Discord.</summary>
   [BsonId]
@@ -16,5 +15,5 @@ public class Player
   public int Points { get; set; }
 
   /// <summary>The <see cref="Goal"/>s this player can complete to gain points.</summary>
-  public List<PlayerGoal> Goals { get; set; } = null!;
+  public List<Goal> Goals { get; set; } = null!;
 }

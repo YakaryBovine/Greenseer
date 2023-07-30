@@ -2,5 +2,5 @@
 
 public interface IMigrationService
 {
-  public void Migrate();
+  Task Migrate();
 }
