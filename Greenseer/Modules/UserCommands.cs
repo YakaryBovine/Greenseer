@@ -116,6 +116,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       return;
     }
 
+    player.Goals ??= new List<Goal>();
     if (player.Goals.Count >= 5)
     {
       await RespondAsync($"You already have {player.Goals.Count} Goals.", ephemeral: true);
@@ -173,7 +174,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
         return;
       }
 
-      var listOfGoals = player.Goals;
+      var listOfGoals = player.Goals ?? new List<Goal>();
 
       if (listOfGoals.Count == 0)
       {
@@ -207,6 +208,8 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       .Where(x => x.GoalType is GoalType.Universal)
       .ToList();
 
+    player.Goals ??= new List<Goal>();
+    
     var goalToComplete = universalGoals.FirstOrDefault(x => x.Name == goalName) ??
                          player.Goals.FirstOrDefault(x => x.GetParsedName() == goalName);
 
@@ -238,6 +241,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       return;
     }
 
+    player.Goals ??= new List<Goal>();
     var goalToComplete = player.Goals.FirstOrDefault(x => x.GetParsedName() == goalName);
     if (goalToComplete == null)
     {
