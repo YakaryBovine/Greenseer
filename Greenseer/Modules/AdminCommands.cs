@@ -71,10 +71,7 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
       return;
     }
     
-    player.Goals?.Add(new PlayerGoal
-    {
-      GoalName = goal.Name
-    });
+    player.Goals.Add(goal);
     await _sessionRepository.Update(activeSession.Name, activeSession);
     await RespondAsync($"Successfully added Goal {goalName} to {user.Username}.");
   }

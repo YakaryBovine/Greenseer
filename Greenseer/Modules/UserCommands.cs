@@ -57,8 +57,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   [SlashCommand("scores", "Shows the current Scores of every player.")]
   public async Task Scores()
   {
-    var globalSettings = await _globalSettingsRepository.Get(GlobalSettingsId);
-    var session = await _sessionRepository.Get(globalSettings.ActiveSessionId);
+    var session = await GetActiveSession();
     
     try
     {
@@ -118,7 +117,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     var missingGoals = 5 - player.Goals.Count;
     var eligibleGoals = (await _mongoDbService.GetGoals())
       .Where(x => x.GoalType == GoalType.Personal)
-      .Where(x => !player.Goals.Select(playerGoal => playerGoal.GoalName).Contains(x.Name))
+      .Where(x => !player.Goals.Select(goal => goal.Name).Contains(x.Name))
       .ToList();
 
     var eligiblePlayerTargets = activeSession.Players
@@ -134,10 +133,16 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       var drawnGoal = eligibleGoals.GetRandom();
 
       eligibleGoals.Remove(drawnGoal);
-      player.Goals.Add(new PlayerGoal
+      player.Goals.Add(new Goal
       {
-        GoalName = drawnGoal.Name,
-        Target = drawnGoal.HasTarget ? eligiblePlayerTargets.GetRandom() : null
+        Name = drawnGoal.Name,
+        Description = drawnGoal.Description,
+        PointValue = drawnGoal.PointValue,
+        HasTarget = drawnGoal.HasTarget,
+        GoalType = GoalType.Personal,
+        Target = drawnGoal.HasTarget
+          ? eligiblePlayerTargets.GetRandom()
+          : null
       });
     }
     
@@ -166,7 +171,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       return;
     }
     
-    var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.GetParsedName()} ({x.Goal.PointValue})**: {x.GetParsedDescription()}"));
+    var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.GetParsedName()} ({x.PointValue})**: {x.GetParsedDescription()}"));
     await RespondAsync($"__**Your Goals**__ {Environment.NewLine}{readableListOfGoals}", ephemeral: true);
   }
   
@@ -187,7 +192,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       .ToList();
 
     var goalToComplete = universalGoals.FirstOrDefault(x => x.Name == goalName) ??
-                         player.Goals.FirstOrDefault(x => x.GetParsedName() == goalName)?.Goal;
+                         player.Goals.FirstOrDefault(x => x.GetParsedName() == goalName);
 
     if (goalToComplete == null)
     {
@@ -196,7 +201,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     }
 
     if (goalToComplete.GoalType is not GoalType.Universal)
-      player.Goals.Remove(player.Goals.First(x => x.GoalName == goalToComplete.Name));
+      player.Goals.Remove(player.Goals.First(x => x.Name == goalToComplete.Name));
     
     player.Points += goalToComplete.PointValue;
     
