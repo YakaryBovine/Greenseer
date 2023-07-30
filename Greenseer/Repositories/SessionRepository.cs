@@ -4,7 +4,7 @@ using MongoDB.Driver;
 
 namespace Greenseer.Repositories;
 
-public sealed class SessionRepository
+public sealed class SessionRepository : IRepository<Session>
 {
   private readonly IMongoCollection<Goal> _sessionCollection;
 
@@ -13,5 +13,25 @@ public sealed class SessionRepository
     var mongoClient = new MongoClient(mongoDbSettings.Value.ConnectionString);
     var database = mongoClient.GetDatabase(mongoDbSettings.Value.DatabaseName);
     _sessionCollection = database.GetCollection<Goal>(mongoDbSettings.Value.SessionCollectionName);
+  }
+
+  public Task Create(Session player)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task Update(string id, Session player)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task<Session?> Get(string id)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task<List<Session>> GetAll()
+  {
+    throw new NotImplementedException();
   }
 }

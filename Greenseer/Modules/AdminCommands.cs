@@ -2,6 +2,7 @@
 using Discord.Interactions;
 using Discord.WebSocket;
 using Greenseer.Models;
+using Greenseer.Repositories;
 using Greenseer.Services;
 
 namespace Greenseer.Modules;
@@ -10,10 +11,15 @@ namespace Greenseer.Modules;
 public sealed class AdminCommands : InteractionModuleBase<SocketInteractionContext>
 {
   private readonly IMongoDbService _mongoDbService;
+  private readonly IRepository<Session> _sessionRepository;
+  private readonly IRepository<GlobalSettings> _globalSettingsRepository;
+  private const string GlobalSettingsId = "0";
 
-  public AdminCommands(IMongoDbService mongoDbService)
+  public AdminCommands(IMongoDbService mongoDbService, IRepository<Session> sessionRepository, IRepository<GlobalSettings> globalSettingsRepository)
   {
     _mongoDbService = mongoDbService;
+    _sessionRepository = sessionRepository;
+    _globalSettingsRepository = globalSettingsRepository;
   }
 
   [SlashCommand("addgoal", "Adds a new Goal type to the game.")]
@@ -49,7 +55,8 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
   [RequireUserPermission(GuildPermission.Administrator)]
   public async Task GiveGoal(SocketGuildUser user, string goalName)
   {
-    var player = await _mongoDbService.GetPlayer(user.Id.ToString());
+    var activeSession = await GetActiveSession();
+    var player = activeSession.Players.FirstOrDefault(x => x.Id == user.Id.ToString());
     if (player == null)
     {
       await RespondAsync($"{user.Username} is not registered.");
@@ -68,7 +75,13 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
     {
       GoalName = goal.Name
     });
-    await _mongoDbService.UpdatePlayer(player.Id!, player);
+    await _sessionRepository.Update(activeSession.Name, activeSession);
     await RespondAsync($"Successfully added Goal {goalName} to {user.Username}.");
+  }
+  
+  private async Task<Session> GetActiveSession()
+  {
+    var settings = await _globalSettingsRepository.Get(GlobalSettingsId);
+    return await _sessionRepository.Get(settings.ActiveSessionId);
   }
 }

@@ -7,9 +7,10 @@ namespace Greenseer.Models;
 /// </summary>
 public sealed class Session
 {
+  /// <summary>The name of the active Session.</summary>
   [BsonId]
-  public string? Id { get; set; }
+  public string? Name { get; set; }
   
   /// <summary>All <see cref="Player"/>s registered to this session.</summary>
-  public List<Player> Goals { get; set; } = null!;
+  public List<Player> Players { get; set; } = null!;
 }

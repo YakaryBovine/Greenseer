@@ -1,7 +1,7 @@
 ﻿using Greenseer.Models;
 using MongoDB.Driver;
 
-namespace Greenseer.Migrations;
+namespace Greenseer.Services;
 
 public interface IMigration
 {

@@ -10,12 +10,15 @@ namespace Greenseer.Modules;
 public sealed class UserCommands : InteractionModuleBase<SocketInteractionContext>
 {
   private readonly IMongoDbService _mongoDbService;
-  private readonly IRepository<Player> _playerRepository;
-
-  public UserCommands(IMongoDbService mongoDbService, IRepository<Player> playerRepository)
+  private readonly IRepository<Session> _sessionRepository;
+  private readonly IRepository<GlobalSettings> _globalSettingsRepository;
+  private const string GlobalSettingsId = "0";
+  
+  public UserCommands(IMongoDbService mongoDbService, IRepository<Session> sessionRepository, IRepository<GlobalSettings> globalSettingsRepository)
   {
     _mongoDbService = mongoDbService;
-    _playerRepository = playerRepository;
+    _sessionRepository = sessionRepository;
+    _globalSettingsRepository = globalSettingsRepository;
   }
   
   [SlashCommand("allgoals", "Lists all Goals of a particular type.")]
@@ -54,9 +57,12 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   [SlashCommand("scores", "Shows the current Scores of every player.")]
   public async Task Scores()
   {
+    var globalSettings = await _globalSettingsRepository.Get(GlobalSettingsId);
+    var session = await _sessionRepository.Get(globalSettings.ActiveSessionId);
+    
     try
     {
-      var listOfPlayers = await _playerRepository.GetAll();
+      var listOfPlayers = session.Players;
       var orderedPlayers = listOfPlayers.OrderByDescending(x => x.Points);
       var playerScores = string.Join(Environment.NewLine, orderedPlayers.Select(x => $"**{x.Name}**: {x.Points}"));
       await RespondAsync($"__**Scores**__ {Environment.NewLine}{playerScores}");
@@ -70,29 +76,33 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   [SlashCommand("register", "Registers you as a player in the ongoing game.")]
   public async Task Register()
   {
+    var session = await GetActiveSession();
     var user = Context.User;
 
-    if (await _playerRepository.Get(user.Id.ToString()) != null)
+    if (session.Players.FirstOrDefault(x => x.Id == user.Id.ToString()) != null)
     {
       await RespondAsync("You are already registered.");
       return;
     }
 
-    await _mongoDbService.CreatePlayer(new Player
+    session.Players.Add(new Player
     {
       Id = user.Id.ToString(),
       Name = user.Username,
       Points = 0
     });
+    _sessionRepository.Update(session.Name, session);
+      
     await RespondAsync($"Registered {user.Username} to the ongoing game.");
   }
   
   [SlashCommand("draw", "Draws Personal Goals from the deck until you have 5 total Goals.")]
   public async Task Draw()
   {
+    var activeSession = await GetActiveSession();
     var user = Context.User;
 
-    var player = await _playerRepository.Get(user.Id.ToString());
+    var player = activeSession.Players.FirstOrDefault(x => x.Id == user.Id.ToString());
     if (player == null)
     {
       await RespondAsync("You are not registered. Register by using the /register command.", ephemeral: true);
@@ -111,7 +121,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       .Where(x => !player.Goals.Select(playerGoal => playerGoal.GoalName).Contains(x.Name))
       .ToList();
 
-    var eligiblePlayerTargets = (await _playerRepository.GetAll())
+    var eligiblePlayerTargets = activeSession.Players
       .Where(x => x.Id != player.Id)
       .ToList();
     for (var i = 0; i < missingGoals; i++)
@@ -131,8 +141,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       });
     }
     
-    await _mongoDbService.UpdatePlayer(player.Id!, player);
-    
+    await _sessionRepository.Update(activeSession.Name, activeSession);
     await RespondAsync($"{player.Name} has successfully drawn up to 5 Goals.");
   }
   
@@ -140,8 +149,9 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   public async Task MyGoals()
   {
     var user = Context.User;
+    var activeSession = await GetActiveSession();
 
-    var player = await _playerRepository.Get(user.Id.ToString());
+    var player = activeSession.Players.FirstOrDefault(x => x.Id == user.Id.ToString());
     if (player == null)
     {
       await RespondAsync("You are not registered. Register by using the /register command.", ephemeral: true);
@@ -164,7 +174,8 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   public async Task Complete(string goalName)
   {
     var user = Context.User;
-    var player = await _playerRepository.Get(user.Id.ToString());
+    var activeSession = await GetActiveSession();
+    var player = activeSession.Players.FirstOrDefault(x => x.Id == user.Id.ToString());
     if (player == null)
     {
       await RespondAsync("You are not registered. Register by using the /register command.");
@@ -188,7 +199,8 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       player.Goals.Remove(player.Goals.First(x => x.GoalName == goalToComplete.Name));
     
     player.Points += goalToComplete.PointValue;
-    await _mongoDbService.UpdatePlayer(player.Id!, player);
+    
+    await _sessionRepository.Update(activeSession.Name, activeSession);
     await RespondAsync($"{player.Name} has successfully completed {goalName}! They are awarded {goalToComplete.PointValue} Points.");
   }
   
@@ -196,7 +208,9 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   public async Task Discard(string goalName)
   {
     var user = Context.User;
-    var player = await _playerRepository.Get(user.Id.ToString());
+    var activeSession = await GetActiveSession();
+    var player = activeSession.Players.FirstOrDefault(x => x.Id == user.Id.ToString());
+    
     if (player == null)
     {
       await RespondAsync("You are not registered. Register by using the /register command.");
@@ -211,7 +225,13 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     }
 
     player.Goals.Remove(goalToComplete);
-    await _mongoDbService.UpdatePlayer(player.Id!, player);
+    await _sessionRepository.Update(activeSession.Name, activeSession);
     await RespondAsync($"{player.Name} has discarded {goalName}.");
+  }
+
+  private async Task<Session> GetActiveSession()
+  {
+    var settings = await _globalSettingsRepository.Get(GlobalSettingsId);
+    return await _sessionRepository.Get(settings.ActiveSessionId);
   }
 }
