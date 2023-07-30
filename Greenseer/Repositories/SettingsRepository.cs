@@ -1,26 +1,26 @@
 ﻿using Greenseer.Models;
+using Microsoft.Extensions.Options;
+using MongoDB.Bson;
+using MongoDB.Driver;
 
 namespace Greenseer.Repositories;
 
 public sealed class GlobalSettingsRepository : IRepository<GlobalSettings>
 {
-  public Task Create(GlobalSettings player)
-  {
-    throw new NotImplementedException();
-  }
+  private readonly IMongoCollection<GlobalSettings> _globalSettingsCollection;
 
-  public Task Update(string id, GlobalSettings player)
+  public GlobalSettingsRepository(IOptions<GoalDatabaseOptions> mongoDbSettings)
   {
-    throw new NotImplementedException();
+    var mongoClient = new MongoClient(mongoDbSettings.Value.ConnectionString);
+    var database = mongoClient.GetDatabase(mongoDbSettings.Value.DatabaseName);
+    _globalSettingsCollection = database.GetCollection<GlobalSettings>(mongoDbSettings.Value.SessionCollectionName);
   }
+  
+  public async Task Create(GlobalSettings globalSettings) => await _globalSettingsCollection.InsertOneAsync(globalSettings);
 
-  public Task<GlobalSettings?> Get(string id)
-  {
-    throw new NotImplementedException();
-  }
+  public async Task Update(string id, GlobalSettings globalSettings) => await _globalSettingsCollection.ReplaceOneAsync(x => x.Id == id, globalSettings);
 
-  public Task<List<GlobalSettings>> GetAll()
-  {
-    throw new NotImplementedException();
-  }
+  public async Task<GlobalSettings?> Get(string id) => await _globalSettingsCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
+
+  public async Task<List<GlobalSettings>> GetAll() => await _globalSettingsCollection.Find(new BsonDocument()).ToListAsync();
 }
