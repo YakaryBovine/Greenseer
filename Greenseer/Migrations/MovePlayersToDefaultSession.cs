@@ -7,17 +7,18 @@ namespace Greenseer.Migrations;
 
 public sealed class MovePlayersToDefaultSession : IMigration
 {
-  public DatabaseVersion Version { get; } = new(2, 0, 0, 0);
+  public DatabaseVersion Version { get; } = new(2, 0, 1, 1);
 
   public void Migrate(IMongoDatabase database)
   {
-    var playerCollection = database.GetCollection<BsonDocument>("Players");
-    var sessionCollection = database.GetCollection<BsonDocument>("Session");
+    var playerCollection = database.GetCollection<Player>("Players");
+    var sessionCollection = database.GetCollection<Session>("Session");
     var players = playerCollection.Find(new BsonDocument()).ToList();
 
-    var newSession = new BsonDocument
+    var newSession = new Session
     {
-      ["Players"] = players.ToBson()
+      Name = "Nathaniel's Rebellion",
+      Players = players
     };
     sessionCollection.InsertOne(newSession);
     
