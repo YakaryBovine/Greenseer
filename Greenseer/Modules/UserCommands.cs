@@ -76,24 +76,31 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   [SlashCommand("register", "Registers you as a player in the ongoing game.")]
   public async Task Register()
   {
-    var session = await GetActiveSession();
-    var user = Context.User;
-
-    if (session.Players.FirstOrDefault(x => x.Id == user.Id.ToString()) != null)
+    try
     {
-      await RespondAsync("You are already registered.");
-      return;
+      var session = await GetActiveSession();
+      var user = Context.User;
+
+      if (session.Players.FirstOrDefault(x => x.Id == user.Id.ToString()) != null)
+      {
+        await RespondAsync("You are already registered.");
+        return;
+      }
+
+      session.Players.Add(new Player
+      {
+        Id = user.Id.ToString(),
+        Name = user.Username,
+        Points = 0
+      });
+      await _sessionRepository.Update(session.Name, session);
+
+      await RespondAsync($"Registered {user.Username} to the ongoing game.");
     }
-
-    session.Players.Add(new Player
+    catch (Exception ex)
     {
-      Id = user.Id.ToString(),
-      Name = user.Username,
-      Points = 0
-    });
-    await _sessionRepository.Update(session.Name, session);
-      
-    await RespondAsync($"Registered {user.Username} to the ongoing game.");
+      await Logger.Log(LogSeverity.Error, nameof(MyGoals), ex.Message, ex);
+    }
   }
   
   [SlashCommand("draw", "Draws Personal Goals from the deck until you have 5 total Goals.")]

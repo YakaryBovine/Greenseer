@@ -12,5 +12,5 @@ public sealed class Session
   public string Name { get; set; } = null!;
   
   /// <summary>All <see cref="Player"/>s registered to this session.</summary>
-  public List<Player> Players { get; set; } = null!;
+  public List<Player> Players { get; set; } = new();
 }
