@@ -1,5 +1,4 @@
-﻿using Greenseer.Migrations;
-using Greenseer.Models;
+﻿using Greenseer.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 

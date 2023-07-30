@@ -15,4 +15,6 @@ public sealed class GoalDatabaseOptions
   public string PlayerCollectionName { get; set; } = null!;
 
   public string SessionCollectionName { get; set; } = null!;
+
+  public string GlobalSettingsCollectionName { get; set; } = null!;
 }
