@@ -23,6 +23,35 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
     _globalSettingsRepository = globalSettingsRepository;
   }
 
+  [SlashCommand("registerplayer", "Registers another player in the ongoing game.")]
+  public async Task Register(SocketGuildUser user)
+  {
+    try
+    {
+      var session = await GetActiveSession();
+
+      if (session.Players.FirstOrDefault(x => x.Id == user.Id.ToString()) != null)
+      {
+        await RespondAsync($"{user.Username} is already registered to {session.Name}.");
+        return;
+      }
+
+      session.Players.Add(new Player
+      {
+        Id = user.Id.ToString(),
+        Name = user.Username,
+        Points = 0
+      });
+      await _sessionRepository.Update(session.Name, session);
+
+      await RespondAsync($"Registered {user.Username} to {session.Name}.");
+    }
+    catch (Exception ex)
+    {
+      await Logger.Log(LogSeverity.Error, nameof(Register), ex.Message, ex);
+    }
+  }
+  
   [SlashCommand("addgoal", "Adds a new Goal type to the game.")]
   [RequireUserPermission(GuildPermission.Administrator)]
   public async Task AddGoal(string name, string description, int pointValue, GoalType goalType = GoalType.Personal, bool hasTarget = false)
