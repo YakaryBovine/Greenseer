@@ -31,7 +31,6 @@ Bootstrapper.ServiceCollection.AddSingleton<IRepository<GlobalSettings>, GlobalS
 Bootstrapper.ServiceCollection.AddSingleton<IMigrationService, MigrationService>();
 Bootstrapper.ServiceCollection.AddSingleton<IDatabaseSeedingService, DatabaseSeedingService>();
 Bootstrapper.InitializeServiceProvider();
-Bootstrapper.ServiceProvider.GetRequiredService<IMigrationService>().Migrate();
 
 await MainAsync();
 
@@ -39,6 +38,7 @@ async Task MainAsync()
 {
   await Bootstrapper.ServiceProvider.GetRequiredService<IInteractionHandler>().InitializeAsync();
   await Bootstrapper.ServiceProvider.GetRequiredService<IDatabaseSeedingService>().SeedDatabaseAsync();
+  await Bootstrapper.ServiceProvider.GetRequiredService<IMigrationService>().Migrate();
   var token = configurationRoot.GetRequiredSection("Discord")["DiscordBotToken"];
   if (string.IsNullOrWhiteSpace(token))
   {

@@ -7,7 +7,7 @@ namespace Greenseer.Migrations;
 
 public sealed class AddFullDetailToGoals : IMigration
 {
-  public DatabaseVersion Version { get; } = new(2, 0, 8, 0);
+  public Version Version { get; } = new(2, 0, 8, 0);
 
   public void Migrate(IMongoDatabase database)
   {

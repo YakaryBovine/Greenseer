@@ -1,5 +1,4 @@
-﻿using Greenseer.Models;
-using Greenseer.Services;
+﻿using Greenseer.Services;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -7,7 +6,7 @@ namespace Greenseer.Migrations;
 
 public sealed class ChangeGoalsToPlayerGoals : IMigration
 {
-  public DatabaseVersion Version { get; } = new(0, 0, 0, 4);
+  public Version Version { get; } = new(0, 0, 0, 4);
 
   public void Migrate(IMongoDatabase database)
   {
