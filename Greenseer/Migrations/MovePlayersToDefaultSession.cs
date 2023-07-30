@@ -7,7 +7,7 @@ namespace Greenseer.Migrations;
 
 public sealed class MovePlayersToDefaultSession : IMigration
 {
-  public DatabaseVersion Version { get; } = new(2, 0, 1, 1);
+  public DatabaseVersion Version { get; } = new(2, 0, 1, 0);
 
   public void Migrate(IMongoDatabase database)
   {

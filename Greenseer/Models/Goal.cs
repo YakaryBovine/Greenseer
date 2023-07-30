@@ -2,11 +2,12 @@
 
 namespace Greenseer.Models;
 
+[BsonIgnoreExtraElements]
 public sealed class Goal
 {
   [BsonId]
   public string Name { get; set; } = null!;
-  
+
   /// <summary>What the user needs to do to complete the goal.</summary>
   public string Description { get; set; } = null!;
 
