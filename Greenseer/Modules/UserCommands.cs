@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Greenseer.Exceptions;
 using Greenseer.Extensions;
 using Greenseer.Models;
 using Greenseer.Repositories;
@@ -68,7 +69,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
     }
     catch (Exception ex)
     {
-      Logger.Log(LogSeverity.Error, nameof(Scores), ex.Message, ex);
+      await Logger.Log(LogSeverity.Error, nameof(Scores), ex.Message, ex);
     }
   }
 
@@ -90,7 +91,7 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
       Name = user.Username,
       Points = 0
     });
-    _sessionRepository.Update(session.Name, session);
+    await _sessionRepository.Update(session.Name, session);
       
     await RespondAsync($"Registered {user.Username} to the ongoing game.");
   }
@@ -153,26 +154,34 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   [SlashCommand("mygoals", "Shows you all of your incomplete Goals.")]
   public async Task MyGoals()
   {
-    var user = Context.User;
-    var activeSession = await GetActiveSession();
-
-    var player = activeSession.Players.FirstOrDefault(x => x.Id == user.Id.ToString());
-    if (player == null)
+    try
     {
-      await RespondAsync("You are not registered. Register by using the /register command.", ephemeral: true);
-      return;
+      var user = Context.User;
+      var activeSession = await GetActiveSession();
+
+      var player = activeSession.Players.FirstOrDefault(x => x.Id == user.Id.ToString());
+      if (player == null)
+      {
+        await RespondAsync("You are not registered. Register by using the /register command.", ephemeral: true);
+        return;
+      }
+
+      var listOfGoals = player.Goals;
+
+      if (listOfGoals.Count == 0)
+      {
+        await RespondAsync("You have no Goals. Draw some with the /draw command.", ephemeral: true);
+        return;
+      }
+
+      var readableListOfGoals = string.Join(Environment.NewLine,
+        listOfGoals.Select(x => $"**{x.GetParsedName()} ({x.PointValue})**: {x.GetParsedDescription()}"));
+      await RespondAsync($"__**Your Goals**__ {Environment.NewLine}{readableListOfGoals}", ephemeral: true);
     }
-
-    var listOfGoals = player.Goals;
-
-    if (listOfGoals.Count == 0)
+    catch (Exception ex)
     {
-      await RespondAsync("You have no Goals. Draw some with the /draw command.", ephemeral: true);
-      return;
+      await Logger.Log(LogSeverity.Error, nameof(MyGoals), ex.Message, ex);
     }
-    
-    var readableListOfGoals = string.Join(Environment.NewLine, listOfGoals.Select(x => $"**{x.GetParsedName()} ({x.PointValue})**: {x.GetParsedDescription()}"));
-    await RespondAsync($"__**Your Goals**__ {Environment.NewLine}{readableListOfGoals}", ephemeral: true);
   }
   
   [SlashCommand("complete", "Completes the Goal with the specified name.")]
@@ -237,6 +246,14 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   private async Task<Session> GetActiveSession()
   {
     var settings = await _globalSettingsRepository.Get(GlobalSettingsId);
-    return await _sessionRepository.Get(settings.ActiveSessionId);
+    if (settings == null)
+      return await Task.FromException<Session>(new DocumentNotFoundException(typeof(GlobalSettings), GlobalSettingsId));
+
+    var session = await _sessionRepository.Get(settings.ActiveSessionId);
+
+    if (session == null)
+      return await Task.FromException<Session>(new DocumentNotFoundException(typeof(Session), settings.ActiveSessionId));
+    
+    return session;
   }
 }

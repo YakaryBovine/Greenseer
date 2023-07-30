@@ -9,7 +9,7 @@ public sealed class Session
 {
   /// <summary>The name of the active Session.</summary>
   [BsonId]
-  public string? Name { get; set; }
+  public string Name { get; set; } = null!;
   
   /// <summary>All <see cref="Player"/>s registered to this session.</summary>
   public List<Player> Players { get; set; } = null!;
