@@ -1,9 +1,8 @@
-﻿using Greenseer.Migrations;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
 namespace Greenseer.Models;
 
-public class Player
+public sealed class Player
 {
   /// <summary>The player's ID according to Discord.</summary>
   [BsonId]
