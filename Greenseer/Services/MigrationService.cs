@@ -12,11 +12,10 @@ public sealed class MigrationService : IMigrationService
   private readonly IMongoDatabase _database;
   private const string GlobalSettingsId = "0";
 
-  public MigrationService(IOptions<GoalDatabaseOptions> mongoDbSettings, IRepository<GlobalSettings> globalSettingsRepository)
+  public MigrationService(IMongoClient mongoClient, IOptions<GoalDatabaseOptions> mongoDbSettings, IRepository<GlobalSettings> globalSettingsRepository)
   {
     _globalSettingsRepository = globalSettingsRepository;
-    var client = new MongoClient(mongoDbSettings.Value.ConnectionString);
-    _database = client.GetDatabase(mongoDbSettings.Value.DatabaseName);
+    _database = mongoClient.GetDatabase(mongoDbSettings.Value.DatabaseName);
   }
   
   public async Task Migrate()
