@@ -1,5 +1,4 @@
-﻿using Discord;
-using Greenseer.Models;
+﻿using Greenseer.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -20,7 +19,6 @@ public sealed class MongoDbService : IMongoDbService
     try
     {
       mongoClient.GetDatabase("admin").RunCommand<BsonDocument>(new BsonDocument("ping", 1));
-      Logger.Log(LogSeverity.Info, nameof(MongoDbService), "Successfully connected to MongoDB deployment.");
     }
     catch (Exception ex)
     {

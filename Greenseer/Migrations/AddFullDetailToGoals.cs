@@ -17,7 +17,7 @@ public sealed class AddFullDetailToGoals : IMigration
     
     var allPlayerGoals = allSessions
       .SelectMany(x => x.Players)
-      .SelectMany(x => x.Goals);
+      .SelectMany(x => x.Goals ?? new List<Goal>());
 
     foreach (var playerGoal in allPlayerGoals)
     {

@@ -42,7 +42,7 @@ public sealed class MigrationService : IMigrationService
     if (migrationInstances.Count <= 0) 
       return;
     
-    globalSettings.DatabaseVersion = migrationInstances.Select(x => x.Version).Max();
+    globalSettings.DatabaseVersion = migrationInstances.Select(x => x.Version).Max()!;
     await _globalSettingsRepository.Update(globalSettings.Id, globalSettings);
   }
 }

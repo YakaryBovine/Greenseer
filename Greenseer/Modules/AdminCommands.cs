@@ -137,7 +137,8 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
       await RespondAsync($"There is no goal named {goalName}.");
       return;
     }
-    
+
+    player.Goals ??= new List<Goal>();
     player.Goals.Add(goal);
     await _sessionRepository.Update(activeSession.Name, activeSession);
     await RespondAsync($"Successfully added Goal {goalName} to {user.Username}.");
@@ -146,6 +147,14 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
   private async Task<Session> GetActiveSession()
   {
     var settings = await _globalSettingsRepository.Get(GlobalSettingsId);
-    return await _sessionRepository.Get(settings.ActiveSessionId);
+    if (settings == null)
+      throw new DocumentNotFoundException(typeof(GlobalSettings), GlobalSettingsId);
+
+    var session = await _sessionRepository.Get(settings.ActiveSessionId);
+    
+    if (session == null)
+      throw new DocumentNotFoundException(typeof(Session), settings.ActiveSessionId);
+    
+    return session;
   }
 }
