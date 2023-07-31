@@ -52,9 +52,9 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
     }
   }
   
-  [SlashCommand("addgoal", "Adds a new Goal type to the game.")]
+  [SlashCommand("newgoal", "Adds a new Goal type to the game.")]
   [RequireUserPermission(GuildPermission.Administrator)]
-  public async Task AddGoal(string name, string description, int pointValue, GoalType goalType = GoalType.Personal, bool hasTarget = false)
+  public async Task NewGoal(string name, string description, int pointValue, GoalType goalType = GoalType.Personal, bool hasTarget = false)
   {
     await _mongoDbService.CreateGoal(new Goal
     {
@@ -144,6 +144,48 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
     await RespondAsync($"Successfully added Goal {goalName} to {user.Username}.");
   }
   
+  [SlashCommand("editgoal", "Edits an existing Goal for all players.")]
+  [RequireUserPermission(GuildPermission.Administrator)]
+  public async Task EditGoal(string goalName, string? description = null, int? pointValue = null, GoalType? goalType = null, bool? hasTarget = null)
+  {
+    var updateCount = 0;
+
+    foreach (var session in await _sessionRepository.GetAll())
+    {
+      var playerGoals = session.Players
+        .SelectMany(x => x.Goals ?? new List<Goal>())
+        .Where(x => x.Name == goalName);
+      foreach (var goal in playerGoals)
+        UpdateGoal(goal, description, pointValue, goalType, hasTarget);
+      await _sessionRepository.Update(session.Name, session);
+      updateCount++;
+    }
+
+    foreach (var goal in (await _mongoDbService.GetGoals()).Where(x => x.Name == goalName))
+    {
+      UpdateGoal(goal, description, pointValue, goalType, hasTarget);
+      await _mongoDbService.UpdateGoal(goal.Name, goal);
+      updateCount++;
+    }
+    
+    await RespondAsync($"Successfully {updateCount} Goals named {goalName}.");
+  }
+
+  private static void UpdateGoal(Goal goal, string? description, int? pointValue, GoalType? goalType, bool? hasTarget)
+  {
+    if (description != null)
+      goal.Description = description;
+
+    if (pointValue != null)
+      goal.PointValue = pointValue.Value;
+
+    if (goalType != null)
+      goal.GoalType = goalType.Value;
+
+    if (hasTarget != null)
+      goal.HasTarget = hasTarget.Value;
+  }
+
   private async Task<Session> GetActiveSession()
   {
     var settings = await _globalSettingsRepository.Get(GlobalSettingsId);
