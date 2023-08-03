@@ -168,7 +168,7 @@ public sealed class AdminCommands : InteractionModuleBase<SocketInteractionConte
       updateCount++;
     }
     
-    await RespondAsync($"Successfully {updateCount} Goals named {goalName}.");
+    await RespondAsync($"Successfully updated {updateCount} Goals named {goalName}.");
   }
 
   private static void UpdateGoal(Goal goal, string? description, int? pointValue, GoalType? goalType, bool? hasTarget)
