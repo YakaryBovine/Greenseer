@@ -25,33 +25,43 @@ public sealed class UserCommands : InteractionModuleBase<SocketInteractionContex
   [SlashCommand("allgoals", "Lists all Goals of a particular type.")]
   public async Task AllGoals(GoalType goalType)
   {
-    var listOfGoals = (await _mongoDbService.GetGoals()).Where(x => x.GoalType == goalType).ToList();
-
-    if (listOfGoals.Count == 0)
+    try
     {
-      await RespondAsync($"There are no {goalType.ToString()} Goals registered in the system.");
-      return;
-    }
+      var listOfGoals = (await _mongoDbService.GetGoals()).Where(x => x.GoalType == goalType).ToList();
 
-    var alreadyResponded = false;
-    var page = 0;
-    const int goalsPerMessage = 15;
-    while (listOfGoals.Any())
-    {
-      if (listOfGoals.Count <= page*goalsPerMessage)
-        return;
-      
-      var goalsToDisplay = listOfGoals.Skip(page*goalsPerMessage).Take(goalsPerMessage);
-      var readableListOfGoals = string.Join(Environment.NewLine, goalsToDisplay.Select(x => $"**{x.Name} ({x.PointValue})**: {x.Description}"));
-      var responseMessage = $"__**{goalType.ToString()} Goals (Page {page+1})**__ {Environment.NewLine}{readableListOfGoals}";
-      if (!alreadyResponded)
+      if (listOfGoals.Count == 0)
       {
-        await RespondAsync(responseMessage);
-        alreadyResponded = true;
+        await RespondAsync($"There are no {goalType.ToString()} Goals registered in the system.");
+        return;
       }
-      else
-        await FollowupAsync(responseMessage);
-      page++;
+
+      var alreadyResponded = false;
+      var page = 0;
+      const int goalsPerMessage = 14;
+      while (listOfGoals.Any())
+      {
+        if (listOfGoals.Count <= page * goalsPerMessage)
+          return;
+
+        var goalsToDisplay = listOfGoals.Skip(page * goalsPerMessage).Take(goalsPerMessage);
+        var readableListOfGoals = string.Join(Environment.NewLine,
+          goalsToDisplay.Select(x => $"**{x.Name} ({x.PointValue})**: {x.Description}"));
+        var responseMessage =
+          $"__**{goalType.ToString()} Goals (Page {page + 1})**__ {Environment.NewLine}{readableListOfGoals}";
+        if (!alreadyResponded)
+        {
+          await RespondAsync(responseMessage);
+          alreadyResponded = true;
+        }
+        else
+          await FollowupAsync(responseMessage);
+
+        page++;
+      }
+    }
+    catch (Exception ex)
+    {
+      await Logger.Log(LogSeverity.Error, nameof(AllGoals), ex.Message, ex);
     }
   }
   
